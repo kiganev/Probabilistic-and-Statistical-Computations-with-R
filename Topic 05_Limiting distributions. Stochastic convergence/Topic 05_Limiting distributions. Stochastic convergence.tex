@@ -1,0 +1,417 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+%\usepackage{gensymb}
+%\usepackage{verbatim}
+\usepackage{mathrsfs}  
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{\mathsf{E}}
+\DeclareMathOperator{\var}{\mathsf{Var}}
+\DeclareMathOperator{\cov}{\mathsf{Cov}}
+\DeclareMathOperator{\corr}{\mathsf{Corr}}
+\DeclareMathOperator{\plim}{plim}
+\DeclareMathOperator{\rank}{rank}
+
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+\lstdefinestyle{rstyle}%
+{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\bfseries\color{blue!50!black},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstset{language=R,frame=single}    
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty
+
+\title{R403: Probabilistic and Statistical Computations\\ with R}
+\subtitle{Topic 5: \textcolor{myred}{Limiting Distributions. Stochastic Convergence}}
+\author{Kaloyan Ganev}
+
+\date{2022/2023} 
+
+\begin{document}
+\maketitle
+
+\begin{frame}[fragile]
+\frametitle{Lecture Contents}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}[fragile]
+	\frametitle{Introduction}
+	\begin{itemize}
+		\item A quick and rather informal introduction offered
+		
+		\item Some applications in R will also be shown
+	\end{itemize}
+\end{frame}
+
+\section{Some Important Inequalities}
+\begin{frame}[fragile]
+	\frametitle{Some Important Inequalities}
+	\begin{itemize}
+		\item Assume that the distribution of the random variable $ X $ is unknown but its mean (and possibly its variance) is known
+		
+		\item The following two inequalities allow to determine bounds to probabilities in such cases\footnote{In case the distribution is known, the probabilities can be computed exactly.}
+		
+		\item \textbf{Markov's inequality:} If $ X \geq 0 $, then for any $ a > 0 $
+		\[
+			P(X \geq a) \leq \dfrac{\E(X)}{a}
+		\]
+		
+		\textcolor{orange}{Interpretation:} The probability of observing a value of $ X $ that is far away from the mean is getting smaller with $ a $ increasing
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Some Important Inequalities (2)}
+	\begin{itemize}
+		\item \textbf{Chebyshev's inequality:} If $ X $ has mean $ \mu $ and variance $ \sigma^{2} $, then for any $ k > 0 $
+		\[
+			P(|X - \mu| \geq k\sigma) \leq \dfrac{1}{k^{2}}
+		\]
+		
+		\textcolor{orange}{Interpretation:} The probability of observing an absolute deviation of a random variable from its mean greater than or equal to $ k $ standard deviations from the mean is bounded by $ 1/k^{2} $
+		
+		\item Implication: The probability of being within $ k $ standard deviations is greater than or equal to $ 1 - \dfrac{1}{k^{2}} $, i.e.
+		\[
+			P(|X - \mu| < k\sigma) \geq \dfrac{1}{k^{2}}
+		\]
+		
+		\item \textcolor{red}{Note:} there is no requirement that $ X \geq 0 $
+	\end{itemize}
+\end{frame}
+
+\section{Modes of Stochastic Convergence}
+\begin{frame}[fragile]
+	\frametitle{The Weak Law of Large Numbers}
+	\begin{itemize}
+		\item Main idea: the sample mean of a large number of i.i.d. random variables is very close to the theoretical mean with high probability
+		
+		\item Let $ X_{1}, X_{2}, \ldots $ be a sequence of $ i.i.d.(\mu, \sigma^{2}) $ random variables
+		
+		\item Take a sample of size $ n $; denote the sample mean by $ \overline{X} $, i.e.
+		\[
+			\overline{X} = \dfrac{X_{1} + X_{2} + \ldots + X_{n}}{n}
+		\]
+		
+		\item Take expectations of both sides:
+		\[
+			\E(\overline{X}) = \dfrac{\E(X_{1}) + \E(X_{2}) + \ldots + \E(X_{n})}{n} = \dfrac{\mu + \mu + \ldots + \mu}{n} = \mu
+		\]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{The Weak Law of Large Numbers (2)}
+	\begin{itemize}
+		\item Calculate the variance of both sides:
+		\[
+			\var(\overline{X}) = \dfrac{\var(X_{1}) + \var(X_{2}) + \ldots + \var(X_{n})}{n^{2}} = \dfrac{\sigma^{2} + \sigma^{2} + \ldots + \sigma^{2}}{n^{2}} = \dfrac{\sigma^{2}}{n}
+		\]
+		
+		\item Use the Chebyshev inequality (which can also be written as\footnote{Note that $ \sigma^{2} $ here denotes the variance of $ X $, and not that of $ \overline{X} $} $ P(|X - \mu| \geq k) \leq \dfrac{\sigma^{2}}{k^{2}} $):
+		\[
+			P(|\E(X) - \mu| \geq \varepsilon) \leq \dfrac{\sigma^{2}}{n\varepsilon^{2}}
+		\]
+		
+		\item This is valid for each $ \varepsilon > 0 $
+		
+		\item The RHS goes to 0 as $ n \to \infty $
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{The Weak Law of Large Numbers (3)}
+	\begin{itemize}
+		\item This leads to the following theorem:\footnote{Known also as the Khinchin Theorem.}
+		\begin{theorem}[Weak Law of Large Numbers]
+			If $ X_{1}, X_{2},\ldots, $ are i.i.d. random variables with mean $ \mu $,
+			\[
+				\lim_{n\to\infty} P(|\E(X) - \mu| \geq \varepsilon) = 0, \quad \forall \varepsilon > 0
+			\]
+		\end{theorem}
+	
+		\item We will illustrate that result in R
+		
+		\item We draw 100000 random numbers from a normal distribution\footnote{Distribution and parameters are picked arbitrarily; play with the code by changing them.} with $ \mu = 5 $ and $ \sigma^{2} = 9 $ 
+		
+		\item Look at the script named \texttt{law\_of\_large\_numbers.R}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Convergence in Probability}
+	\begin{itemize}
+		\item The type of convergence that is seen in the Law of Large Numbers is not however the same as convergence of deterministic sequences
+		
+		\item The difference is that the sequence is one of random variables here
+		
+		\item To make things precise, we first recall what deterministic convergence is
+		\begin{definition}[Convergence of a deterministic sequence]
+			The sequence of real numbers $ a_{1}, a_{2}, \ldots $ converges to the real number $ a $ if $ \forall \varepsilon > 0\ \exists n_{0}: |a_{n} - a| \leq \varepsilon,\ \forall n \geq n_{0}$. We denote this by
+			\[
+				\lim_{n\to\infty}a_{n} = a
+			\]
+		\end{definition}	
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Convergence in Probability (2)}
+	\begin{itemize}
+		\item Given the preceding definition, we can state the definition of convergence in probability
+		\begin{definition}[Convergence in probability]
+			If $ X_{1}, X_{2},\ldots $ is a sequence of random variables and $ a $ is a real number, the sequence $ X_{n} $ converges in probability to $ a $ if 
+			\[
+				\lim_{n\to\infty}P(|X_{n} - a| \geq \varepsilon) = 0,\quad \forall \varepsilon > 0
+			\]
+		\end{definition}
+	
+		\item Note that we do not require that the random variables are independent
+		
+		\item The Weak Law of Large Numbers uses in fact the notion of convergence in probability
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Convergence in Probability (3)}
+	\begin{itemize}
+		\item If the sequence of random variables $ X_{1}, X_{2}, \ldots $ converges in probability to $ a $, then when $ n $ becomes large, almost all of the probability mass/density will be within $ \varepsilon $ from $ a $
+		
+		\item This allows to rewrite the definition of convergence in probability as follows: $ \ \forall \varepsilon > 0, \ \forall \delta > 0 $ there exists some $ n_{0}  $ such that
+		\[
+			P(|X_{n} - a| \geq \varepsilon) \leq \delta,\quad \forall n \geq n_{0}
+		\]
+		
+		\item $ \varepsilon $ here is known as \textit{accuracy level}, while $ \delta $ is known as \textit{confidence level}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Convergence in Distribution}
+	\begin{definition}[Convergence in Distribution]
+		Let $ X_{1}, X_{2}, \ldots $ be a sequence of random variables with cdfs $ F_{X_{1}}, F_{X_{2}},\ldots $, and also let $ X $ be a random variable with cdf $ F_{X} $. Denote by $ C(F_{X}) $ the set of values of $ X $ for which $ F_{X} $ is continuous. Then the sequence $ X_{n} $ converges in distribution to $ X $ if
+		\[
+			\lim_{n\to\infty}F_{X_{n}}(x) = F_{X}(x),\quad \forall x \in C(F_{X})
+		\]
+	\end{definition}
+	\begin{itemize}
+		\item Notation:
+		\[
+			X_{n} \overset{d}{\to} X
+		\]
+		
+		\item The distribution of $ X $ is called the \textit{asymptotic} or \textit{limiting} distribution of the sequence $ \{X_{n}\} $
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Central Limit Theorem}
+	\begin{itemize}
+		\item Start from the Khinchin Theorem
+		
+		\item It states that with the increase of $ n $, the distribution of $ \overline X $ gets more and more concentrated around the true mean $ \mu $
+		
+		\item That also means its variance ($ \sigma^{2}/n $) converges to 0
+		
+		\item Take now the sum
+		\[
+			S_{n} = X_{1} + \ldots + X_{n} = n\E(X) = n\overline{X}
+		\]
+		
+		\item The variance of this sum is
+		\[
+			\var(S_{n}) = \var(n\overline{X}) = n^{2}\var(\overline{X}) = n\sigma^{2}
+		\]
+		
+		\item When $ n \to \infty $, $ n\sigma^{2} \to \infty $
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Central Limit Theorem (2)}
+	\begin{itemize}
+		\item Consider a case between those two extremes: the deviation of $ S_{n} $ from its mean,\footnote{The mean is $ \E(S_{n}) = \E(X_{1}) + \ldots + \E(X_{n}) = \mu + \ldots + \mu = n\mu $.} i.e. $ S_{n} - n\mu $
+		
+		\item Let $ X_{1}, X_{2}, \ldots $ be a sequence of $ i.i.d.(\mu, \sigma^{2}) $ random variables
+		
+		\item Define 
+		\[
+			Z_{n} = \dfrac{S_{n} - n\mu}{\sigma\sqrt{n}}
+		\]
+		
+		\item The mathematical expectation of $ Z_{n} $ equals
+		\[
+			\E(Z_{n}) = \E\left(\dfrac{S_{n} - n\mu}{\sigma\sqrt{n}}\right) = 0,
+		\]
+		and its variance correspondingly is
+		\[
+			\var(Z_{n}) = \var\left(\dfrac{S_{n} - n\mu}{\sigma\sqrt{n}}\right) = 1
+		\]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Central Limit Theorem (3)}
+	\begin{theorem}[Central Limit Theorem]
+		Let $ X_{1}, X_{2}, \ldots $ be a sequence of $ i.i.d.(\mu, \sigma^{2}) $ random variables. Define
+		\[
+			Z_{n} = \dfrac{X_{1} + \ldots + X_{n} - n\mu}{\sigma\sqrt{n}}
+		\]
+		Then the cdf of $ Z_{n} $ converges to the standard normal cdf, i.e. 
+		\[
+			\lim_{n\to\infty} P(Z_{n}\leq z) = \boldsymbol\Phi(z), \quad \forall z
+		\]
+		where
+		
+		\[
+			\boldsymbol \Phi(z) = \dfrac{1}{\sqrt{2\pi}}\int\limits_{-\infty}^{z} e^{-\frac{x^{2}}{2}}\, dx
+		\]
+	\end{theorem}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{The Strong Law of Large Numbers}
+	\begin{itemize}
+		\item Also relates to the convergence of the sample mean to the true population one
+		
+		\item However, the type of convergence that it uses is different
+	\begin{definition}[Strong Law of Large Numbers]
+		Let $ X_{1}, X_{2}, \ldots $ be a sequence of i.i.d. random variables. If $ \E(X_{i}) = \mu $, then the sequence of sample means $ M_{n} = \dfrac{X_{1} + \ldots + X_{n}}{n}$ converges to $ \mu $ with probability 1, i.e.
+		\[
+			P\left(\lim_{n\to\infty}\dfrac{X_{1} + \ldots + X_{n}}{n} = \mu\right) = 1
+		\]
+	\end{definition}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{The Strong Law of Large Numbers (2)}
+	\begin{itemize}
+		\item To get insight into the definition, consider the sample space $ \mathcal{S} $ consisting of infinite sequences of real numbers $ (x_{1}, x_{2},\ldots) $
+		
+		\item In other words, the sequence of random variables $ X_{1}, X_{2},\ldots $ will produce one realization, i.e. one such sequence of numbers
+		
+		\item Consider $ A \subset \mathcal{S} $ consisting of only the sequences $ (x_{1}, x_{2},\ldots) $ which have an average $ \mu $ when $ n\to\infty $
+		
+		\[
+			 (x_{1}, x_{2},\ldots) \in A \Leftrightarrow \lim_{n\to\infty}\dfrac{x_{1} + \ldots + x_{n}}{n} = \mu
+		\]
+		
+		\item The Strong Law states that all of the probability mass is in $ A $ which is not guaranteed for the Weak Law
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Almost Sure Convergence}
+	\begin{definition}
+		If $ X_{1}, X_{2},\ldots $ is a sequence of random variables and $ c $ is a real number, $ X_{n} $ converges almost surely (i.e. with probability 1) given that
+		\[
+			P\left(\lim_{n\to\infty} X_{n} = c\right) = 1
+		\]
+	\end{definition}
+	
+	\begin{itemize}
+		\item \textcolor{red}{Note:} There is no independence requirement concerning random variables 
+		
+		\item The Strong Law uses the notion of almost sure convergence
+		
+		\item Notation
+		\[
+			X_{n} \overset{a.s.}{\to} c
+		\]
+		
+		\item \textcolor{red}{Important:} Almost sure convergence $ \Rightarrow $ Convergence in probability $ \Rightarrow $ Convergence in distribution
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{References}
+	\begin{itemize}
+		\item Bertsekas, D., and J. Tsitsiklis (2008): \textit{Introduction to Probability}, Athena Scientific, 2nd ed.
+		
+		\item Hogg, R., J. McKean, and A. Craig (2018): \textit{Introduction to Mathematical Statistics}, Pearson, 8th ed.
+		
+		\item \url{https://www.analyticsvidhya.com/blog/2019/05/statistics-101-introduction-central-limit-theorem/}
+		
+		\item \url{https://statistical-engineering.com/clt-summary/}
+	\end{itemize}
+\end{frame}
+
+\end{document}

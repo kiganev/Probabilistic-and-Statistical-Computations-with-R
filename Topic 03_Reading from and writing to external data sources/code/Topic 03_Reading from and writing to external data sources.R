@@ -1,22 +1,30 @@
 # Clear workspace
 rm(list = ls())
 
+# Clear plots
+check_dev <- dev.list()
+if(!is.null(check_dev)){
+  dev.off(dev.list()["RStudioGD"])  
+}
+
 # Get location of current script
 fileloc <- dirname(rstudioapi::getSourceEditorContext()$path)
 
 # Set working directory to script location
 setwd(fileloc)
 
-rm(fileloc)
+rm(fileloc, check_dev)
 
 # Read data
 routes.df <- read.table("routes.txt", sep = ",",
                         header = FALSE)
 
 # Name variables
-names(routes.df) <- c("Airline", "Airline_ID", "Source_airport", "Source_airport_ID",
+names(routes.df) <- c("Airline", "Airline_ID", "Source airport", "Source_airport_ID",
                       "Destination_airport", "Destination_airport_ID", "Codeshare",
                       "Stops", "Equipment")
+
+random_data <- read.csv2("Book1.csv")
 
 # Write text file
 write.table(routes.df, "routes.tsv", sep = "\t")
@@ -35,15 +43,28 @@ weka1 <- read.arff("cpu.with.vendor.arff")
 # Read Stata files:
 stata1 <- read.dta("phillips.dta")
 
+stata2 <- read.dta("odd1.dta")
+
+library(haven)
+
+stata2 <- read_dta("odd1.dta")
+
 # Read SPSS
 spss1 <- read.spss("MathAssess-SpssFormat.sav", to.data.frame = TRUE)
 
 # Write files with foreign
 write.arff(routes.df, "routes.arff")
+names(routes.df)[3] <- "Source_Airport" # write_dta() does not like spaces in variable names
+routes.df$Codeshare <- NA
 write.dta(routes.df, "routes.dta") # will likely produce an error so
-library(haven)
+
+write.dta(random_data, "random_data.dta")
+
+# With haven
 write_dta(routes.df, "routes.dta")
-write.foreign(sas1, "stata2.csv", "stata2.do", package = "Stata") # SAS and SPSS are also possible
+write.foreign(sas1, "stata2.csv",
+              "stata2.do", 
+              package = "Stata") # SAS and SPSS are also possible
 
 # Read and write xlsx
 library(openxlsx)
@@ -53,7 +74,7 @@ library(readxl)
 xlsx2 <- read_excel("benefits.xlsx", sheet = "benefits", 
                     range = "A1:S1849")
 
-write.xlsx(sas1,"sas1.xlsx")
+write.xlsx(sas1,"sas1.xlsx", overwrite = T)
 
 library(writexl)
 write_xlsx(sas1, "sas2.xlsx")
@@ -92,7 +113,6 @@ mydb2 <- dbConnect(drv2, dbname = "ensembl_compara_51",
                    user="anonymous", password="", 
                    host = "ensembldb.ensembl.org")
 class(mydb2)
-
 
 dbListTables(mydb2)
 

@@ -1,0 +1,315 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{mathpazo}
+\usepackage{setspace}
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+
+\DeclareMathOperator{\E}{\mathsf{E}}
+
+\begin{document}
+\title{Some Problems in Probability}
+\author{Kaloyan Ganev}
+\date{\empty}
+\maketitle
+
+Note: The problems are taken from the 7th edition of Hogg and Craig's \textit{Introduction to Mathematical Statistics}, and the solutions are mine.
+
+\onehalfspacing
+\paragraph{1.3.10.} A bowl contains 16 chips, of which 6 are red, 7 are white, and 3 are blue. If four chips are taken at random and without replacement, find the probability that:
+(a) each of the four chips is red; (b) none of the four chips is red; (c) there is at least one chip of each color.
+
+\paragraph{Solution:}
+\begin{itemize}
+	\item[(a)] Four chips can be selected in $16 \choose 4$ ways. Red chips can be selected in $6 \choose 4$ ways. The probability is then:
+	
+	\[
+		P(\textrm{4 red chips}) = \displaystyle\frac{{6 \choose 4}}{{16 \choose 4}} \approx 0.008
+	\]
+	
+	\item[(b)] Analogical to (a), only the four chips are selected among the white and blue ones (10 in total). The probability is:
+	
+	\[
+		P(\textrm{4 non-red chips}) = \displaystyle\frac{{10 \choose 4}}{{16 \choose 4}} \approx 0.115
+	\]
+	
+	\item[(c)] 
+	
+	\[
+		P(\textrm{at least 1 of each colour}) = \displaystyle\frac{{6 \choose 1}{7 \choose 1}{3 \choose 2}}{{16 \choose 4}} + \frac{{6 \choose 1}{7 \choose 2}{3 \choose 1}}{{16 \choose 4}} + \frac{{6 \choose 2}{7 \choose 1}{3 \choose 1}}{{16 \choose 4}} = 0.45
+	\]
+\end{itemize} 
+
+\paragraph{1.3.12.} Compute the probability of being dealt at random and without replacement a 13-card bridge hand consisting of: (a) 6 spades, 4 hearts, 2 diamonds, and 1 club; (b) 13 cards of the same suit.
+
+\paragraph{Solution:} 
+\begin{itemize}
+	\item[(a)] 
+	\[
+		P(\textrm{hand}) = \frac{{13 \choose 6}{13 \choose 4}{13 \choose 2}{13 \choose 1}}{{52 \choose 13}} \approx 0.002
+	\]	
+	
+	\item[(b)]
+	\[
+		P(\textrm{hand}) = \frac{{4 \choose 1}}{{52 \choose 13}} \approx 6.3\cdot 10^{-12}
+	\]
+\end{itemize}
+
+\paragraph{1.3.15.} In a lot of 50 light bulbs, there are 2 bad bulbs. An inspector examines five bulbs, which are selected at random and without replacement.
+(a) Find the probability of at least one defective bulb among the five.
+(b) How many bulbs should be examined so that the probability of finding at least
+one bad bulb exceeds $\dfrac{1}{2}$?
+
+\paragraph{Solution:}
+\paragraph{1.3.15.}
+
+\begin{itemize}
+	\item[(a)] The probability of having no defective bulb among the five selected is:
+
+	\[
+		P(\textrm{no defective bulb}) = \frac{{48 \choose 5}}{{50 \choose 5}}
+	\]
+
+Therefore, the probability of having at least one defective bulb is:
+
+	\[
+		P(\textrm{at least one defective bulb}) = 1 - \frac{{48 \choose 5}}{{50 \choose 5}} \approx 0.19
+	\]
+	
+	\item[(b)] We have to solve the inequality:
+	
+	\[
+		P(\textrm{at least one defective bulb}) = 1 - \frac{{48 \choose x}}{{50 \choose x}} > 0.5
+	\]
+	
+	We have:
+	
+	\[
+		{48 \choose x} < 0.5 \, {50 \choose x}
+	\]
+	
+	or:
+	
+	\[
+		\frac{48!}{x!(48-x)!} < 0.5\, \frac{50!}{x!(50-x)!}
+	\]
+	
+	\[
+		(50-x)(49-x) < 0.5\cdot 50\cdot 49
+	\]
+	
+	\[
+		x^{2} - 99x + 1225 < 0
+	\]
+	
+	\[
+		x > 14.5 \Rightarrow x = 15		
+	\]
+\end{itemize}
+
+\paragraph{1.4.4.} From a well-shuffled deck of ordinary playing cards, four cards are turned over one at a time without replacement. What is the probability that the spades and red cards alternate?
+
+\paragraph{Solution:}
+	\[
+		P(\textrm{spades and red cards alternate}) = \frac{13}{52}\cdot\frac{26}{51}\cdot\frac{12}{50}\cdot\frac{25}{49}  + \frac{26}{52}\cdot\frac{13}{51}\cdot\frac{25}{50}\cdot\frac{12}{49} \approx 0.03 
+	\] 
+	
+\paragraph{1.4.10.} In an office there are two boxes of computer disks: Box C1 contains seven
+Verbatim disks and three Control Data disks, and box C2 contains two Verbatim disks and eight Control Data disks. A person is handed a box at random with prior probabilities $P(C_{1}) = \dfrac{2}{3}$ and $P(C_{2}) = \dfrac{1}{3}$, possibly due to the boxes’ respective locations. A disk is then selected at random and the event $C$ occurs if it is from Control Data. Using an equally likely assumption for each disk in the selected box, compute $P(C_{1}|C)$ and $P(C_{2}|C)$.
+
+\paragraph{Solution:}
+	\[
+		P(C_{1}|C) = \frac{P(C_{1})P(C|C_{1})}{P(C_{1})P(C|C_{1}) + P(C_{2})P(C|C_{2})} = \frac{\frac{2}{3}\frac{3}{10}}{\frac{2}{3}\frac{3}{10} + \frac{1}{3}\frac{8}{10}} = \frac{6}{14} = \frac{3}{7}
+	\]
+
+	\[
+		P(C_{2}|C) = \frac{P(C_{2})P(C|C_{2})}{P(C_{1})P(C|C_{1}) + P(C_{2})P(C|C_{2})} = \frac{\frac{1}{3}\frac{8}{10}}{\frac{2}{3}\frac{3}{10} + \frac{1}{3}\frac{8}{10}} = \frac{8}{14} = \frac{4}{7}
+	\] 
+	
+\paragraph{1.4.32.} Hunters A and B shoot at a target; the probabilities of hitting the target
+are $p_{1}$ and $p_{2}$, respectively. Assuming independence, can $p_{1}$ and $p_{2}$ be selected so that
+	\[
+		P(\textrm{zero hits}) = P(\textrm{one hit}) = P(\textrm{two hits})?
+	\]
+
+\paragraph{Solution:}
+
+	\[
+		P(\textrm{zero hits}) = (1-p_{1})(1-p_{2})
+	\]
+
+	\[
+		P(\textrm{one hit}) = p_{1}(1-p_{2}) + p_{2}(1-p_{1})
+	\]
+
+	\[
+		P(\textrm{two hits}) = p_{1}p_{2}
+	\]
+
+	Equate the three probabilities:
+
+	\[
+	\begin{array}{lclcl}
+		(1-p_{1})(1-p_{2}) & = & p_{1}(1-p_{2}) + p_{2}(1-p_{1}) & = & p_{1}p_{2}\\
+		1 - p_{2} - p_{1} + p_{1}p_{2} & = & p_{1} - p_{1}p_{2} + p_{2} - p_{1}p_{2} & = & p_{1}p_{2}
+	\end{array}
+	\]
+
+	Subtract $p_{1}p_{2}$ from each part of the triple equality:
+	\[
+		1 - p_{2} - p_{1} = p_{1} - 3p_{1}p_{2} + p_{2} =  0
+	\]
+
+	Write it as a system:
+
+	\[
+		\left|
+		\begin{array}{lcl}
+			1 - p_{2} - p_{1} & = & 0\\
+			p_{1} - 3p_{1}p_{2} + p_{2} & = &  0
+		\end{array}
+		\right.
+	\]
+
+	From this:
+	\[
+	\left|
+	\begin{array}{lcl}
+			p_{1} + p_{2} & = & 1\\
+			p_{1}p_{2} & = & \frac{1}{3}
+	\end{array}
+	\right.
+	\]
+
+	Using Vieta's formulas, we can show that $p_{1}$ and $p_{2}$ are the roots of the quadratic equation:
+	\[
+		p^{2} - p + \frac{1}{3} = 0 
+	\]
+
+	The discriminant of this equation is:
+
+	\[
+		D = -\frac{1}{3} < 0
+	\]
+
+	Therefore, no real $p_{1}$ and $p_{2}$ exist so that the equalities are satisfied. 
+	
+\paragraph{1.5.4.} For each of the following, find the constant $c$ so that $p(x)$ satisfies the condition of being a pmf of one random variable X.
+	\begin{enumerate}
+		\item[(a)] $p(x) = c\left(\dfrac{2}{3}\right)^{x},\ x = 1, 2, 3, . . .$, zero elsewhere.
+		
+		\item[(b)] $p(x) = cx,\ x = 1, 2, 3, 4, 5, 6,$ zero elsewhere.
+	\end{enumerate}
+
+\begin{itemize}
+	\item[(a)]
+	\[
+		1 = \sum_{x=1}^{\infty} c \left(\frac{2}{3}\right)^{x} = c\frac{\frac{2}{3}}{1 - \frac{2}{3}} = 2c \Rightarrow c = \frac{1}{2}
+	\]
+	
+	\item[(b)]
+	\[
+		1 = \sum_{x=1}^{6}cx = 21c \Rightarrow c = \frac{1}{21}
+	\]
+\end{itemize} 
+
+\paragraph{1.7.18.} Let $X$ be the number of gallons of ice cream that is requested at a certain store on a hot summer day. Assume that $f(x) = 12x(1000-x)^{2}/1012, 0 < x < 1000$, zero elsewhere, is the pdf of $X$. How many gallons of ice cream should the store have on hand each of these days, so that the probability of exhausting its supply on a particular day is 0.05?
+
+\paragraph{Solution:} We look for that $x$ for which the probability that $F(X > x) = 0.05$. The problem to solve is equivalent to finding $x$ for which $F(X \leq x) = 0.95$:
+
+\[
+\begin{array}{lcl}
+	F(X \leq x) & = & \displaystyle \int_{0}^{x} \frac{12t(1000-t)^{2}}{10^{12}}\,dt = \frac{12}{10^{12}} \int_{0}^{x} (1000t - 2000t^{2} + t^{3})\,dt = \\
+	\quad\\
+	& = & \displaystyle \frac{12}{10^{12}}\left(1000000\frac{t^{2}}{2} - 2000\frac{t^{3}}{3} + \frac{t^{4}}{4}\right)\big|_{0}^{x} = \frac{1}{10^{12}}\left(6000000t^{2} - 8000t^{3} + 3t^{4}\right)\big|_{0}^{x} = \\
+	\quad\\
+	& = & \displaystyle\frac{1}{10^{12}}\left(6000000x^{2} - 8000x^{3} + 3x^{4}\right)
+\end{array}
+\]
+
+So, we need to solve:
+
+\[
+3x^{4} - 8000x^{3} +  6000000x^{2} = 0.95\cdot 10^{12}
+\]
+
+Solving this numerically, we find the only positive real root is $x\approx 751.4$ gallons.
+
+\paragraph{1.8.2.} Let $X$ have the pdf $f(x) = (x + 2)/18, -2 < x < 4$, zero elsewhere. Find $ \E(X), \E[(X + 2)^{3}] $, and $ \E[6X - 2(X + 2)^{3}] $.
+
+\paragraph{Solution:} 
+
+\[
+	\mathsf{E}(X) = \int\limits_{-2}^{4} x\cdot\frac{x+2}{18}\, dx = \int\limits_{-2}^{4} \frac{x^{2} +2x}{18}\, dx = \frac{x^{3} + 3x^{2}}{54}\Big|_{-2}^{4} = \frac{112}{54} - \frac{4}{54} = 2
+\]
+
+\quad\\
+
+\[
+\begin{array}{lcl}
+	\mathsf{E}[(X+2)^3] & = & \displaystyle \int\limits_{-2}^{4}(x + 2)^{3}\cdot\frac{x+2}{18}\, dx = \int\limits_{-2}^{4}\frac{(x+2)^{4}}{18}\, dx =\\
+	\quad\\
+	& = & \displaystyle \frac{(x+2)^5}{90}\Big|_{-2}^{4} = \frac{7776 - 0}{90} = 86.4
+\end{array}
+\]
+
+\quad\\
+
+\[
+\begin{array}{lcl}
+	\mathsf{E}[6X -2(X+2)^3] & = & \displaystyle \int\limits_{-2}^{4}[6x - 2(x + 2)^{3}]\cdot\frac{x+2}{18}\, dx = \\
+	\quad\\
+	& = & \displaystyle \int\limits_{-2}^{4}x\cdot\frac{(x+2)}{3}\, dx - \int\limits_{-2}^{4}\frac{(x+2)^{4}}{9}\, dx = \\
+	\quad\\
+	& = & \displaystyle \frac{x^{3} + 3x^{2}}{9}\Big|_{-2}^{4} - \frac{(x+2)^5}{45}\Big|_{-2}^{4} = \\
+	\quad\\
+	& = & \displaystyle \frac{112-4}{9} - \frac{7776-0}{45} = 12 - 172.8 =  -160.8
+\end{array}
+\] 
+
+\paragraph{1.8.5.} Let the pmf $ p(x) $ be positive at $x = -1, 0, 1$ and zero elsewhere.
+\begin{enumerate}
+	\item[(a)] If $ p(0) = \dfrac{1}{4}$ , find $ \E(X^{2}) $.
+	
+	\item If $ p(0) = \dfrac{1}{4}$ and if If $ \E(X) = \dfrac{1}{4}$, determine $ p(-1)$ and $ p(1) $.
+\end{enumerate}
+
+\paragraph{Solution:}
+\begin{itemize}
+	\item[(a)] We can easily say that $\displaystyle p(-1) + p(1) = 1 - p(0) = \frac{3}{4}$. We can proceed directly to the calculation of $\mathsf{E}(X^{2})$ using this. Applying the formula:
+	\[
+	\mathsf{E}(X^{2}) = \sum_{x=-1}^{1}x^{2}p(x) = (-1)^{2}p(-1) + 0^{2}\frac{1}{4} + 1^2p(1) =  p(-1) + p(1) = \frac{3}{4}
+	\]
+	
+	\item[(b)]
+	\[
+	\frac{1}{4} = \mathsf{E}(X) = \sum_{x=-1}^{1}xp(x) = -1\cdot p(-1) + 0\cdot p(0) + 1\cdot p(1) = p(1) - p(-1)
+	\]
+	
+	We also have:
+	\[
+	p(1) + p(-1) = 1 - p(0) = \frac{3}{4}
+	\]
+	
+	We have two equations in two unknowns. Solving them leads to $\displaystyle p(1) = \frac{1}{2}$ and $\displaystyle p(-1) = \frac{1}{4}$.
+\end{itemize}
+
+\paragraph{1.8.10.} Let X have a Cauchy distribution which has the pdf
+	\[
+		f(x) = \dfrac{1}{\pi}\cdot \dfrac{1}{x^{2} + 1}, \quad -\infty < x < \infty
+	\]
+Then $X$ is symmetrically distributed about 0 (why?). Why isn't $ \E(X) = 0 $?
+
+\paragraph{Solution:} $X$ is symmetrically distributed around zero because it is an inverted quadratic function which is symmetrical around zero ($x^2+1$). If we have to find the mean of this distribution, we would have to compute the integral: 
+
+\[
+	\int_{-\infty}^{\infty} x\cdot \frac{1}{\pi}\cdot \frac{1}{1+x^{2}}\,dx = \frac{1}{2\pi}\ln(1+x^{2})\Big|_{-\infty}^{\infty} = \infty - \infty
+\]
+
+The latter expression does not define a finite number (in other words, the integral does not converge) so the mean does not exist, i.e. it is not defined.
+
+\end{document}

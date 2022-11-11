@@ -1,0 +1,1154 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+\usepackage{gensymb}
+\usepackage{verbatim}
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments 
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+\lstdefinestyle{rstyle}%
+	{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\color{blue},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstdefinestyle{sqlstyle}%
+	{language=SQL,
+	basicstyle=\footnotesize\ttfamily,
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\bfseries\color{blue!50!black},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{lightgray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstdefinestyle{mlstyle}%
+{language=Matlab,
+	basicstyle=\footnotesize\ttfamily,
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\bfseries\color{blue!50!black},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{lightgray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single} 
+
+\lstset{language=R,frame=single}
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty
+
+
+
+\title{R403: Probabilistic and Statistical Computations\\ with R}
+\subtitle{Topic 2: \textcolor{myred}{Matrix Algebra. Eigenvalues and Eigenvectors. R's Matrix Algebra Capabilities. Complex Numbers}}
+\author{Kaloyan Ganev}
+
+\date{2022/2023} 
+
+\begin{document}
+\maketitle
+
+\begin{frame}[fragile]
+\frametitle{Lecture Contents}
+\tableofcontents
+\end{frame}  
+
+\section{Matrix Algebra Basics}
+\begin{frame}[fragile]
+\frametitle{Matrix Algebra Basics}
+\begin{itemize}
+	\item An $m\times n$ matrix $\mathbf{A}$ is a rectangular array of numbers:
+	\[
+		\mathbf{A} = 
+		\begin{pmatrix}
+			a_{11} & a_{12} & \cdots & a_{1n}\\
+			a_{21} & a_{22} & \cdots & a_{2n}\\
+			\vdots & \vdots & \ddots & \vdots\\
+			a_{m1} & a_{m2} & \cdots & a_{mn}\\
+		\end{pmatrix}
+	\]
+	\item How to create one in R (say $m = 3, n = 4$):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	A <- matrix(1:12, nrow = 3)	
+	\end{lstlisting}
+	\item Another one (we'll need it in a while):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	B <- matrix(13:24, nrow = 3)	
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Matrix Algebra Basics (2)}
+\begin{itemize}
+	\item Matrix addition and subtraction:
+	\[
+		\begin{array}{lcl}
+			\mathbf{C} = \mathbf{A + B} \Leftrightarrow c_{ij} = a_{ij} + b_{ij}\\
+			\mathbf{D} = \mathbf{A - B} \Leftrightarrow d_{ij} = a_{ij} - b_{ij}
+		\end{array}
+	\]
+	\textcolor{red}{Note:} $\mathbf{A}$ and $\mathbf{B}$ must be conformable!
+	\item In R:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	C <- A + B
+	D <- A - B	
+	\end{lstlisting}
+	\item Matrix transposition:
+	\[
+		\mathbf{E} = \mathbf{A}' \Leftrightarrow e_{ij} = a_{ji}
+	\]
+	\begin{lstlisting}[style = rstyle, breaklines]
+	E <- t(A)	
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Matrix Algebra Basics (3)}
+\begin{itemize}
+	\item Scalar multiplication:
+	\[
+		\mathbf{F} = \alpha\mathbf{A} \Leftrightarrow f_{ij} = \alpha a_{ij}
+	\]
+
+	\item Matrix multiplication: the generic element of the product $\mathbf{G} = \mathbf{AE}$, $g_{ij}$, equals
+	\[
+		g_{ij} = \sum_{r=1}^{n}a_{ir}e_{rj}
+	\]
+	\begin{lstlisting}[style = rstyle, breaklines]
+	G <- A %*% E 	
+	\end{lstlisting}
+
+	\item Conformity rule: the number of columns in $\mathbf{A}$ must equal the number of rows in $\mathbf{E}$
+	
+	\item Check out also
+	\begin{lstlisting}[style = rstyle, breaklines]
+	crossprod(A, B)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Matrix Algebra Basics (4)}
+\begin{itemize}
+	\item Associative law:
+	\[
+		\mathbf{(AB)C} = \mathbf{A(BC)}
+	\]
+	\item Left and right distributive laws:
+	\[
+		\begin{array}{lcl}
+			\mathbf{A(B + C) = AB + AC}\\
+			\mathbf{(A + B)C = AC + BC}
+		\end{array}
+	\]
+	\item Note that in the general case $\mathbf{AB \neq BA}$
+	\item Also, if $\mathbf{A \neq 0}$, $\mathbf{AB = AC}$ \textcolor{red}{does not imply} $\mathbf{B = C}$
+	\item Square matrix: $m = n$ (the number of rows equals the number of columns)
+	\item For a positive integer $n$,
+	\[
+		\mathbf{A}^{n} = \underset{n \textrm{ times}}{\underbrace{\mathbf{AAA\ldots A}}}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Matrix Algebra Basics (5)}
+\begin{itemize}
+	\item Diagonal matrix: all off-main-diagonal elements are 0:
+	\[
+		\mathbf{D} = 
+		\begin{pmatrix}
+		d_{1} & 0 & \ldots & 0\\
+		0 & d_{2} & \ldots & 0\\
+		\vdots & \vdots & \ddots & \vdots\\
+		0 & 0 & \ldots & d_{n}
+		\end{pmatrix}
+	\]
+	\item A convenient feature:
+	\[
+		\mathbf{D}^{n} = 
+		\begin{pmatrix}
+		d_{1}^{n} & 0 & \ldots & 0\\
+		0 & d_{2}^{n} & \ldots & 0\\
+		\vdots & \vdots & \ddots & \vdots\\
+		0 & 0 & \ldots & d_{n}^{n}
+		\end{pmatrix}
+	\]
+	\item Note that we referred to diagonal \textit{square} matrices, but sometimes they can have differing numbers of rows and columns (rectangular matrices)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Matrix Algebra Basics (6)}
+\begin{itemize}
+	\item Identity matrix: special case of a diagonal matrix
+	\[
+		\mathbf{I}_{n} = 
+		\begin{pmatrix}
+		1 & 0 & \ldots & 0\\
+		0 & 1 & \ldots & 0\\
+		\vdots & \vdots & \ddots & \vdots\\
+		0 & 0 & \ldots & 1
+		\end{pmatrix}
+	\]
+	\item Create a (square) diagonal matrix in R:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	D <- diag(c(1,2,3))	
+	\end{lstlisting}
+	\item A $7\times 7$ identity matrix:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	I <- diag(7)	
+	\end{lstlisting}
+	\item Note that $\mathbf{AI = IA = A}$ for every conformable square matrix $\mathbf{A}$
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Matrix Algebra Basics (7)}
+\begin{itemize}
+	\item Rules for transpose matrices:
+	\[
+		\begin{array}{lcl}
+			(\mathbf{A}')' = \mathbf{A}\\
+			(\mathbf{A + B})' = \mathbf{A}' + \mathbf{B}'\\
+			(\alpha \mathbf{A})' = \alpha \mathbf{A}'\\
+			(\mathbf{AB})' = \mathbf{B}'\mathbf{A}'
+		\end{array}
+	\]
+	\item If $\mathbf{A}$ is a square matrix and $\mathbf{A}' = \mathbf{A}$, then $\mathbf{A}$ is called \textit{symmetric}
+	
+	\item Trace of a square matrix: the sum of all main diagonal elements; to calculate
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(psych)
+	tr(I)
+	\end{lstlisting}
+
+	\item Orthogonal square matrix: 
+	\[
+		\mathbf{AA' = A'A = I} \quad (\Leftrightarrow \mathbf{A' = A}^{-1})
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Matrix Algebra Basics (8)}
+\begin{itemize}
+	\item Determinant: can be computed only for \textcolor{red}{square matrices}!
+	\item For $2\times 2$ and $3 \times 3$ matrices: recall the simple rules
+	\item For $n\times n$ matrices, the rule is a bit more complex
+	\item Some rules of computation:
+	\[
+		\begin{array}{lcl}
+			|\mathbf{A}'| = |\mathbf{A}|\\
+			|\mathbf{AB}| = |\mathbf{A}|\cdot |\mathbf{B}|\\
+			|\mathbf{A + B}| \neq |\mathbf{A}| + |\mathbf{B}|
+		\end{array}
+	\]
+	(The third relationship can be an equality only in special cases)
+	\item To calculate the determinant of, say, the matrix $\mathbf{G}$ in R:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	det(G)	
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Matrix Algebra Basics (9)}
+\begin{itemize}
+	\item If $\mathbf{A}$ is an $n\times n$ square matrix and $\det(\mathbf{A}) \neq 0$, then there is a unique matrix $\mathbf{B}$ called the \textit{inverse} of $\mathbf{A}$ such that
+	\[
+		\mathbf{B} = \mathbf{A}^{-1} \Leftrightarrow \mathbf{AB} = \mathbf{I}_{n} \Leftrightarrow \mathbf{BA} = \mathbf{I}_{n}
+	\]
+	\item The reverse is also true, i.e. if $\mathbf{A}^{-1}$ exists, then $\det(\mathbf{A}) \neq 0$
+	\item If the inverse exists, then it is given by
+	\[
+		\mathbf{A}^{-1} = \dfrac{1}{\det(\mathbf{A})}\adj(\mathbf{A}),
+	\]
+	where $\adj(\mathbf{A})$ is the \textit{adjoint matrix} of $\mathbf{A}$
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Matrix Algebra Basics (10)}
+\begin{itemize}
+	\item The adjoint matrix is itself defined as
+	\[
+		\adj(\mathbf{A}) = 
+		\begin{pmatrix}
+			\mathbf{A}_{11} & \mathbf{A}_{21} & \cdots & \mathbf{A}_{n1}\\
+			\mathbf{A}_{12} & \mathbf{A}_{22} & \cdots & \mathbf{A}_{n2}\\
+			\vdots & \vdots & \ddots & \vdots\\
+			\mathbf{A}_{1n} & \mathbf{A}_{2n} & \cdots & \mathbf{A}_{nn}\\
+		\end{pmatrix},
+	\]
+	and each $\mathbf{A}_{ij}$ is the cofactor of the element $a_{ij}$
+	\item Some rules concerning inverses:
+	\[
+		\begin{array}{lcl}
+			(\mathbf{A}^{-1})^{-1} = \mathbf{A}; \quad (\mathbf{AB})^{-1} = \mathbf{B}^{-1}\mathbf{A}^{-1}\\
+			(\mathbf{A}')^{-1} = (\mathbf{A}^{-1})'; \quad (c\mathbf{A})^{-1} = \dfrac{1}{c}\mathbf{A}^{-1}
+		\end{array}
+	\]
+	\item To calculate an inverse in R:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	A <- matrix(rnorm(9), nrow = 3)
+	solve(A)	
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Cramer's Rule}
+\begin{itemize}
+	\item Consider a system of $n$ equations in $n$ unknowns, $x_{1},x_{2},\ldots,x_{n}$,
+	\[
+		\begin{array}{lcl}
+			a_{11}x_{1} + a_{12}x_{2} + \ldots + a_{1n}x_{n} = b_{1}\\
+			a_{21}x_{1} + a_{22}x_{2} + \ldots + a_{2n}x_{n} = b_{2}\\
+			\hdotsfor{1}\\
+			a_{n1}x_{1} + a_{n2}x_{2} + \ldots + a_{nn}x_{n} = b_{n}\\
+		\end{array}
+	\]
+	\item The system has a unique solution if and only if (iff) $\det(\mathbf{A}) \neq 0$
+	\item In such a case, the solution is $x_{j} = |\mathbf{A}_{j}|/|\mathbf{A}|$ where $\mathbf{A}_{j}$ is obtained from $\mathbf{A}$ by replacing the $j$th column with the vector of $b$'s
+	\[
+		|\mathbf{A}_{j}| = 
+		\begin{vmatrix}
+			a_{11} & \cdots & a_{1,j-1} & b_{1} & a_{1,j + 1} & \cdots & a_{1n}\\
+			a_{21} & \cdots & a_{2,j-1} & b_{2} & a_{2,j + 1} & \cdots & a_{2n}\\
+			\vdots & & \vdots & \vdots & \vdots & & \vdots\\ 
+			a_{n1} & \cdots & a_{n,j-1} & b_{n} & a_{n,j + 1} & \cdots & a_{nn}\\
+		\end{vmatrix}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Cramer's Rule (2)}
+\begin{itemize}
+	\item If the RHS of the system has only zeros, the system is called  \textit{homogeneous}
+	\item Homogeneous systems always have the trivial solution $x_{1} = x_{2} = \ldots = x_{n} = 0$
+	\item A homogeneous system has non-trivial solutions iff $\det(\mathbf{A}) = 0$
+	\item Solve non-homogeneous and homogeneous systems of $n$ equations in $n$ unknowns in R:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	A <- matrix(c(1.5, 7.1, 2.2, 3.3, 9.5, 6.8, 1.9, 5.4, 8.2), nrow = 3)
+	det(A)
+	b <- c(1.8, 2.1, 3.0)
+	solve(A, b)
+
+	b1 <- c(0,0,0)
+	solve(A, b1)	
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Vectors}
+\begin{itemize}
+	\item Here we stick to the mathematical (algebraic) notion, not R's one
+	\item A vector is an ordered, one-dimensional collection of numbers
+	\item Consider two vectors of size $n$, $\mathbf{a} = (a_{1}, a_{2},\ldots,a_{n})$ and $\mathbf{b} = (b_{1}, b_{2},\ldots,b_{n})$
+	\item Inner (dot) product:
+	\[
+		\mathbf{a\cdot b} = \sum_{i=1}^{n}a_{i}b_{i}
+	\]
+	\item If you consider the vectors as $n \times 1$ matrices, then the dot product is $\mathbf{a'b}$
+	\item Inner product of vectors in R:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	a <- c(1,2,3)
+	b <- c(2,3,9)
+	dotp <- t(a) %*% b	
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Vectors (2)}
+\begin{itemize}
+	\item Some rules:
+	\[
+		\begin{array}{lcl}
+			\mathbf{a\cdot b = b\cdot a} \\
+			\mathbf{a\cdot(b + c) = a\cdot b + a\cdot c}\\
+			(\alpha\mathbf{a})\cdot \mathbf{b} = \mathbf{a}\cdot(\alpha\mathbf{b}) = \alpha(\mathbf{a\cdot b})
+		\end{array}
+	\]
+	\item Euclidean norm (length of vector):
+	\[
+		\norm{\mathbf{a}} = \sqrt{\mathbf{a\cdot a}} = \sqrt{\sum_{i=1}^{n}a_{i}^{2}}
+	\]
+	\item Cauchy-Schwarz inequality:
+	\[
+		|\mathbf{a\cdot b}| \leq \norm{\mathbf{a}}\cdot \norm{\mathbf{b}}
+	\]
+	\item Triangle inequality:
+	\[
+		\norm{\mathbf{a + b}} \leq \norm{\mathbf{a}} + \norm{\mathbf{b}}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Vectors (3)}
+\begin{itemize}
+	\item Angle $\theta$ between two non-zero vectors $\mathbf{a}$ and $\mathbf{b}$:
+	\[
+		\cos \theta = \dfrac{\mathbf{a\cdot b}}{\norm{\mathbf{a}}\cdot \norm{\mathbf{b}}}
+	\]
+	\item Orthogonality:
+	\[
+		\mathbf{a} \perp \mathbf{b} \Leftrightarrow \mathbf{a\cdot b} = 0
+	\]
+	\item Straight line through $\mathbf{a}$ and $\mathbf{b}$ in $\mathbb{R}^{n}$:
+	\[
+		\mathbf{x} = t\mathbf{a} + (1-t)\mathbf{b},\quad t \in \mathbb{R}^{1}
+	\]
+	\item Hyperplane passing through $\mathbf{a}$ in $\mathbb{R}^{n}$ and orthogonal to the non-zero vector $\mathbf{p} = (p_{1},\ldots, p_{n})$:
+	\[
+		\mathbf{p\cdot(x - a)} = 0
+	\]
+\end{itemize}
+\end{frame}
+
+\section{Linear (In)dependence}
+\begin{frame}[fragile]
+\frametitle{Linear (In)dependence}
+\begin{itemize}
+	\item Consider the column vectors $\mathbf{a}_{1}, \mathbf{a}_{2}, \ldots, \mathbf{a}_{n}$ in $\mathbb{R}^{m}$
+	\item Those vectors are \textit{linearly dependent} if there exist numbers $c_{1}, c_{2},\ldots, c_{n}$, not all zero, such that
+	\[
+		c_{1}\mathbf{a}_{1} + c_{2}\mathbf{a}_{2} + \ldots + c_{n}\mathbf{a}_{n} = \mathbf{0}
+	\]
+	\item If the latter only holds for $c_{1} = c_{2} = \ldots = c_{n} = 0$, the vectors are \textit{linearly independent}
+	\item Now consider a linear system of $m$ equations in $n$ unknowns:
+	\[
+		\begin{array}{lcl}
+			a_{11}x_{1} + a_{12}x_{2} + \ldots + a_{1n}x_{n} = b_{1}\\
+			a_{21}x_{1} + a_{22}x_{2} + \ldots + a_{2n}x_{n} = b_{2}\\
+			\hdotsfor{1}\\
+			a_{m1}x_{1} + a_{m2}x_{2} + \ldots + a_{mn}x_{n} = b_{m}\\
+		\end{array} 
+		\Leftrightarrow
+		x_{1}\mathbf{a}_{1} + \ldots + x_{n}\mathbf{a}_{n} = \mathbf{b}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Linear (In)dependence (2)}
+\begin{itemize}
+	\item Suppose this system of equations has two solutions, $\mathbf{u}' = (u_{1}, u_{2},\ldots, u_{n})$ and $\mathbf{v}' = (v_{1}, v_{2},\ldots, v_{n})$
+	\item Then $u_{1}\mathbf{a}_{1} + \ldots + u_{n}\mathbf{a}_{n} = \mathbf{b}$, and $v_{1}\mathbf{a}_{1} + \ldots + v_{n}\mathbf{a}_{n} = \mathbf{b}$
+	\item Subtract the second equation from the first and define $c_{1} = u_{1} - v_{1}, \ldots, c_{n} = u_{n} - v_{n}$; then:
+	\[
+		c_{1}\mathbf{a}_{1} + \ldots + c_{n}\mathbf{a}_{n} = \mathbf{0}
+	\]
+	\item This implies that when there is more than one solution, the columns $\mathbf{a}_{1}, \mathbf{a}_{2}, \ldots, \mathbf{a}_{n}$ are linearly dependent
+	\item If the columns are linearly independent, then there would be \textit{at most} one solution
+	\item Whether the system has zero or one solution, depends on the values in $\mathbf{b}$
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Linear (In)dependence (3)}
+\begin{theorem}
+	The $n$ column vectors of the square matrix 
+	\[
+		\mathbf{A} = 
+		\begin{pmatrix}
+			a_{11} & a_{12} & \cdots & a_{1n}\\
+			a_{21} & a_{22} & \cdots & a_{2n}\\
+			\vdots & \vdots & \ddots & \vdots\\
+			a_{n1} & a_{n2} & \cdots & a_{nn}\\
+		\end{pmatrix}
+	\]
+	are linearly independent iff \, $|\mathbf{A}| \neq 0$.
+\end{theorem}
+\end{frame}
+
+\section{Rank of a Matrix}
+\begin{frame}[fragile]
+\frametitle{Rank of a Matrix}
+\begin{definition}
+	The rank of a matrix $\mathbf{A}$ is the maximum number of linearly independent column vectors in it.
+\end{definition}
+\begin{itemize}
+	\item Denoted by $r(\mathbf{A})$ or $rank(\mathbf{A})$
+	\item If $\mathbf{A} = \mathbf{0}$, then $rank(\mathbf{A}) = 0$
+	\item If $\mathbf{A}$ is $n\times n$, then $rank(\mathbf{A}) = n$ iff $|\mathbf{A}| \neq 0$
+	\item $k$th minor of a matrix is the determinant of the matrix obtained by deleting all but $k$ rows and $k$ columns
+\end{itemize}
+\begin{theorem}
+	The rank of a matrix equals the order of its largest nonzero minor.
+\end{theorem}
+\begin{theorem}
+	The rank of a matrix is equal to the rank of its transpose.
+\end{theorem}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Rank of a Matrix (2)}
+\begin{itemize}
+	\item To find matrix rank in R, an additional package is needed: \textbf{Matrix}
+	\item This package comes pre-installed in the system library of R
+	\item Still, needs loading
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(Matrix)	
+	\end{lstlisting}
+	\item To calculate the rank of a matrix:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	rankMatrix(E)	
+	\end{lstlisting}
+	\item Note that we are using the default options, otherwise a lot of tweaking is possible (read the associated help)
+\end{itemize}
+\end{frame}
+
+\section{Main Results on Linear Systems}
+\begin{frame}[fragile]
+\frametitle{Main Results on Linear Systems}
+\begin{itemize}
+	\item Consider the linear system $\mathbf{Ax = b}$, where $\mathbf{A}$ is $m\times n$
+	\item Define the following \textit{augmented} matrix containing $\mathbf{A}$ and the vector $\mathbf{b}$:
+	\[
+		\mathbf{A_{b}} = 
+		\begin{pmatrix}
+			a_{11} & a_{12} & \cdots & a_{1n} & b_{1}\\
+			a_{21} & a_{22} & \cdots & a_{2n} & b_{2}\\
+			\vdots & \vdots & \ddots & \vdots & \vdots\\
+			a_{m1} & a_{m2} & \cdots & a_{mn} & b_{n}\\
+		\end{pmatrix}
+	\]
+	\item It is clear that $rank(\mathbf{A_{b}}) \geq rank(\mathbf{A})$
+	\item Also, $rank(\mathbf{A_{b}}) \leq rank(\mathbf{A}) + 1$
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Main Results on Linear Systems (2)}
+\begin{theorem}
+	$\mathbf{Ax = b}$ has a solution $\Leftrightarrow rank(\mathbf{A_{b}}) = rank(\mathbf{A})$.
+\end{theorem}
+\begin{itemize}
+	\item If $\mathbf{A}$ is $n\times n$, then this theorem shows that if $rank(\mathbf{A}) = n$, the system has a solution
+\end{itemize}
+\begin{theorem}
+	Suppose that the system has solutions with $rank(\mathbf{A}) = rank(\mathbf{A_{b}}) = k$.
+	\begin{itemize}
+		\item[(a)] If $k < m$, then $m - k$ equations are superfluous, i.e. any solution that satisfies the $k$ equations corresponding to linearly independent rows will also satisfy the remaining ones
+		\item[(b)] If $k < n$ (i.e. less the number of unknowns), then $n - k$ variables can be chosen freely (\textbf{``degrees of freedom''}), and the remaining $k$ variables are determined uniquely by that choice.
+	\end{itemize}
+\end{theorem}
+\end{frame}
+
+\section{Eigenvalues}
+\begin{frame}[fragile]
+\frametitle{Eigenvalues}
+\begin{itemize}
+	\item In many applications of dynamic economics, you have to calculate $\mathbf{A}^{n}\mathbf{x}$, where $\mathbf{x}$ is a non-zero vector
+	\item This is not easy
+	\item Suppose however that there exists a \textit{scalar} $\lambda$ such that
+	\[
+		\mathbf{Ax} = \lambda \mathbf{x} \quad (*)
+	\]
+	\item In such a case, $\mathbf{A}^{n}\mathbf{x} = \mathbf{A}^{n-1}(\mathbf{Ax}) = \mathbf{A}^{n-1}(\lambda\mathbf{x}) = \ldots = \lambda^{n}\mathbf{x}$
+	\item A non-zero\footnote{Trivial (zero) solutions are of no practical interest.} vector $x$ that solves $(*)$ is called an \textbf{eigenvector}
+	\item The associated $\lambda$ is called an eigenvalue
+	\item Eigenvalues have many important applications; they will be of big importance for us in particular in differential/difference equations/time series analysis
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Eigenvalues (2)}
+\begin{itemize}
+	\item Eigenvalues are also called \textit{characteristic roots}, respectively eigenvectors are known also as \textit{characteristic vectors}
+	\item Note that if $\mathbf{x}$ is an eigenvector associated with an eigenvalue $\lambda$, then $\alpha\mathbf{x}$, where $\alpha \neq 0$ is a scalar, is also an eigenvector
+	\item Eigenvalues are found by solving the matrix equation
+	\[
+		(\mathbf{A} - \lambda \mathbf{I}_{n})\mathbf{x} = \mathbf{0}
+	\]
+	\item This is a homogeneous system which has a solution only if $|\mathbf{A} - \lambda \mathbf{I}_{n}| = 0$
+	\item Therefore, we have to solve the following \textit{characteristic equation} to find the eigenvalues of $\mathbf{A}$;
+	\[
+		p(\lambda) = |\mathbf{A} - \lambda \mathbf{I}_{n}| = 0
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Eigenvalues (3)}
+\begin{itemize}
+	\item The polynomial that results in this problem is called the \textit{characteristic polynomial}
+	\item It is an $n$th-degree polynomial, therefore it has $n$ roots (real or complex)
+	\item Some of the roots can be repeated
+	\item After the eigenvalues are calculated, for each of them the corresponding eigenvectors can be calculated
+	\item In R, eigenvalues and eigenvectors can be calculated as follows:\footnote{Sysdsaeter et. al., p. 22, Example 2.}
+	\begin{lstlisting}[style = rstyle, breaklines]
+	A <- matrix(c(0,1/2,0,0,0,1/3,6,0,0), nrow = 3)
+	eigval <- eigen(A)$values
+	eigvect <- eigen(A)$vectors	
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Eigenvalues (4)}
+\begin{theorem}
+	If $\mathbf{A}$ is $n\times n$ with eigenvalues $\lambda_{1},\lambda_{2},\ldots,\lambda_{n}$, then
+	\begin{itemize}
+		\item[(a)] $|\mathbf{A}| = \lambda_{1}\lambda_{2}\ldots\lambda_{n}$
+		\item[(b)] $\tr(\mathbf{A}) = a_{11} + a_{22} + \ldots + a_{nn} = \lambda_{1} + \lambda_{2} + \ldots + \lambda_{n}$
+	\end{itemize}
+\end{theorem}
+\end{frame}
+
+\section{Diagonalization}
+\begin{frame}[fragile]
+\frametitle{Diagonalization}
+\begin{itemize}
+	\item Let $\mathbf{A}$ and $\mathbf{P}$ be $n\times n$, and also assume that $\mathbf{P}^{-1}$ exists
+	\item Consider the matrix $\mathbf{P}^{-1}\mathbf{AP}$; it has the following characteristic polynomial:
+	\[
+		|\mathbf{P}^{-1}\mathbf{AP} - \lambda \mathbf{I}|
+	\]
+	\item But since $\lambda \mathbf{I} = \mathbf{P}^{-1}\mathbf{P}\lambda \mathbf{I} = \mathbf{P}^{-1}\lambda \mathbf{I}\mathbf{P}$, we can write this characteristic polynomial as:
+	\[
+		|\mathbf{P}^{-1}(\mathbf{A} - \lambda \mathbf{I})\mathbf{P}|
+	\]
+	\item Using the fact that the determinant of the matrix product equals the product of determinants, and also the fact that $|\mathbf{P}^{-1}| = 1/|\mathbf{P}|$, we get
+	\[
+		|\mathbf{P}^{-1}||(\mathbf{A} - \lambda \mathbf{I})||\mathbf{P}| = |(\mathbf{A} - \lambda \mathbf{I})|
+	\]
+	\item In other words, $\mathbf{A}$ and $\mathbf{P}^{-1}\mathbf{AP}$ have the same characteristic polynomial
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Diagonalization (2)}
+\begin{itemize}
+	\item $\mathbf{A}_{n\times n}$ is diagonalizable if there exists an invertible $\mathbf{P}_{n\times n}$ matrix and a diagonal matrix $\mathbf{D}$ such that
+	\[
+		\mathbf{P}^{-1}\mathbf{AP} = \mathbf{D}
+	\]
+	\begin{theorem}
+		$\mathbf{A}_{n\times n}$ is diagonalizable iff it has a set of linearly independent eigenvectors $\mathbf{x}_{1}, \mathbf{x}_{2},\ldots, \mathbf{x}_{n}$. In such a case
+		\[
+			\mathbf{P}^{-1}\mathbf{AP} = \diag(\lambda_{1},\lambda_{2},\ldots,\lambda_{n})
+		\]
+		where the eigenvectors are the columns of $\mathbf{P}$, and the lambdas are the corresponding eigenvalues.
+	\end{theorem}
+	\item A direct implication of the theorem is that $\mathbf{A} = \mathbf{P}\diag(\lambda_{1},\lambda_{2},\ldots,\lambda_{n})\mathbf{P}^{-1}$. Therefore, for $m \in \mathbb{R}$
+	\[
+		\mathbf{A}^{m} = \mathbf{P}\diag(\lambda_{1}^{m},\lambda_{2}^{m},\ldots,\lambda_{n}^{m})\mathbf{P}^{-1}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Diagonalization (3)}
+\begin{itemize}
+	\item $\mathbf{P}$ is called an \textit{orthogonal matrix} if $\mathbf{P}' = \mathbf{P}^{-1}$, i.e. $\mathbf{P'P = I}$
+	\item If $\mathbf{x}_{1}, \mathbf{x}_{2},\ldots, \mathbf{x}_{n}$ are the $n$ columns of $\mathbf{P}$, then $\mathbf{x}_{1}', \mathbf{x}_{2}',\ldots, \mathbf{x}_{n}'$ will be the $n$ rows of $\mathbf{P}'$
+	\item But then $\mathbf{P'P = I}$ reduces to $n$ equations of the type $\mathbf{x}_{i}'\mathbf{x}_{j} = 1$ for $i = j$ and $\mathbf{x}_{i}'\mathbf{x}_{j} = 0$ for $i\neq j$
+	\item Therefore, $\mathbf{P}$ is orthogonal iff $\mathbf{x}_{2},\ldots, \mathbf{x}_{n}$ all have length 1 and are mutually orthogonal
+	\item In economics, we often encounter symmetric matrices (e.g. covariance matrices)
+	\item The following theorem concerns such symmetric matrices
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Diagonalization (4)}
+\begin{theorem}[Spectral Theorem for Symmetric Matrices]
+If $\mathbf{A}_{n\times n}$ is a symmetric matrix then
+\begin{itemize}
+	\item[(a)] $\lambda_{1},\lambda_{2},\ldots,\lambda_{n}$ are all real
+	\item[(b)] Eigenvectors corresponding to different eigenvalues are orthogonal
+	\item[(c)] There exists an orthogonal matrix $\mathbf{P}$ such that
+	\[
+		\mathbf{P}^{-1}\mathbf{AP} = 
+		\begin{pmatrix}
+			\lambda_{1} & 0 & \cdots & 0\\
+			0 & \lambda_{2} & \cdots & 0\\
+			\vdots & \vdots & \ddots & \vdots\\
+			0 & 0 & \cdots & \lambda_{n}\\
+		\end{pmatrix}
+	\]
+	The columns of $\mathbf{P}$, $\mathbf{v}_{1}, \mathbf{v}_{2},\ldots,\mathbf{v}_{n}$ are eigenvectors of length 1 corresponding to the $n$ eigenvalues $\lambda_{1},\lambda_{2},\ldots, \lambda_{n}$.
+\end{itemize}
+\end{theorem}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Diagonalization (5)}
+\begin{itemize}
+	\item In R
+	\begin{lstlisting}[style = rstyle, breaklines]
+	A <- matrix(1:9, nrow = 3)
+	P <- eigen(A)$vectors
+	LAMBDA <- diag(eigen(A)$values)
+
+	P %*% LAMBDA %*% solve(P)	
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\section{Differentiation}
+\begin{frame}[fragile]
+	\frametitle{Gradient}
+	\begin{itemize}
+		\item Take the function
+		\[
+			y = f(x_{1}, x_{2}, \ldots, x_{n})
+		\]
+		
+		\item This function takes as an argument a vector $ \mathbf{x} $ and is scalar-valued
+		
+		\item The vector of its partial derivatives with respect to each of the $ x $'s is called the \textit{gradient (gradient vector)} and is written as
+		\[
+			\nabla f(\mathbf{x}) = \dfrac{\partial f(\mathbf{x})}{\partial \mathbf{x}} = 
+			\left(
+			\begin{array}{c}
+				\dfrac{\partial y}{\partial x_{1}}\\
+				\vdots\\
+				\dfrac{\partial y}{\partial x_{n}}
+			\end{array}
+			\right)
+		\]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Derivative of a Linear Function}
+	\begin{itemize}
+		\item Take the vector of constants $ \mathbf{a} = (a_{1},\ a_{2}, \ldots, a_{n})' $
+		
+		\item A linear function of the $ \mathbf{x} $ vector can be written as
+		\[
+			y = f(\mathbf{x}) = \mathbf{a'x} = a_{1}x_{1} + a_{2}x_{2} + \ldots + a_{n}x_{n}
+		\]
+		
+		\item Take the vector of partial derivatives:
+		\[
+			\nabla f(\mathbf{x}) = 
+			\left(
+			\begin{array}{c}
+				a_{1}\\
+				\vdots\\
+				a_{n}
+			\end{array} 
+			\right) = 
+			\mathbf{a}
+		\]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Derivative of a Linear Function (2)}
+	\begin{itemize}
+		\item Now take a set of linear functions $ y_{j} = \mathbf{a}_{j}'\mathbf{x}, \quad j = 1,2,\ldots, m$
+		
+		\item We can write all of them compactly as
+		\[
+			\mathbf{y = Ax}
+		\]
+		where $ \mathbf{a}_{j}' $ are the rows of the matrix $ \mathbf{A} $
+		
+		\item Taking the gradient of each function leads to the following
+		\[
+			\nabla y_{j} = \dfrac{\partial y_{j}}{\partial \mathbf{x}} = \mathbf{a}_{j},
+		\]
+		
+		i.e. the transpose of the corresponding $ j $th row of $ \mathbf{A} $
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Derivative of a Linear Function (3)}
+	\begin{itemize}
+		\item We can also write
+		\[
+			\left(
+			\begin{array}{c}
+				\partial y_{1}/\partial \mathbf{x}'\\
+				\partial y_{2}/\partial \mathbf{x}'\\
+				\vdots\\
+				\partial y_{m}/\partial \mathbf{x}'
+			\end{array}
+			\right) = 
+			\left(
+			\begin{array}{c}
+				\mathbf{a}_{1}'\\
+				\mathbf{a}_{2}'\\
+				\vdots\\
+				\mathbf{a}_{m}'
+			\end{array}
+			\right)
+		\]
+		
+		\item Using the above,
+		\[
+			\dfrac{\partial \mathbf{Ax}}{\partial\mathbf{x}'} = \mathbf{A}; \quad \dfrac{\partial \mathbf{x'A'}}{\partial\mathbf{x}} = \mathbf{A'}
+		\]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Derivatives and Quadratic Forms}
+	\begin{itemize}
+		\item Wikipedia:
+		\begin{quotation}
+			``...a quadratic form is a polynomial with terms all of degree two...''
+		\end{quotation}
+	
+		\item A quadratic form in $ \mathbf{x} $ would be
+		\[
+			\mathbf{x'Ax} = \sum_{i=1}^{n}\sum_{i=1}^{n}a_{ij}x_{i}x_{j}
+		\]
+		
+		where $ \mathbf{A} $ is $ (n\times n) $
+		
+		\item Differentiate with respect to $ \mathbf{x} $:
+		\[
+			\dfrac{\partial \mathbf{x'Ax}}{\partial \mathbf{x}} = (\mathbf{A + A'})\mathbf{x}
+		\]
+	\end{itemize}
+\end{frame}
+
+\section{Complex Numbers}
+\subsection{Definitions}
+\begin{frame}[fragile]
+	\frametitle{Definitions}
+	\begin{itemize}
+		\item Suppose that the equation:
+		\[
+		x^{2} = -1
+		\]
+		\noindent has a solution
+		\item Call this solution $i$, i.~e. $i^{2} = -1$
+		\item That number $i$ is know also as the \textbf{imaginary unit}.
+	\end{itemize}
+	
+	
+	\begin{definition}
+		A complex number is a number which can be expressed as $a + bi$, where $a,b \in \mathbb{R}^{1}$. $a$ is the real part of the complex number, and $b$ is its imaginary part.
+	\end{definition}
+	\begin{itemize}
+		\item Let $z$ be a complex number such that $z = a + bi$, then the following notation is used:
+		
+		\[
+		\begin{array}{l}
+			Re(z) = a\\
+			Im(z) = b	
+		\end{array}		
+		\]
+	\end{itemize}
+\end{frame}
+
+\subsection{Working with complex numbers}
+\begin{frame}[fragile]
+	\frametitle{Operations with complex numbers}
+	Let $z_{1} = a + bi,\, z_{2} = c + di$. The following operations can be carried out:
+	\begin{enumerate}
+		\item Addition: $z_{1} + z_{2} = (a+c) + (b+d)i$
+		\item Subtraction: $z_{1} - z_{2} = (a-c) + (b-d)i$
+		\item Multiplication: $(a + bi)(c + di) = (ac - bd) + (bc + ad)i$
+		\item Division: $\displaystyle\frac{a + bi}{c + di} = \frac{ac + bd}{c^{2} + d^{2}} + \frac{bc - ad}{c^{2} + d^{2}}i$
+	\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Operations with complex numbers (2)}
+	\begin{itemize}
+		\item Complex conjugate:
+		\[
+		\overline{z} = a - bi
+		\]
+		\item (\textbf{Exercise:} find the complex conjugates of $z_{1} + z_{2}$, $z_{1} - z_{2}$, $z_{1} z_{2}$ and $z_{1}/z_{2}$.)
+		
+		\item Square root of a complex number:
+		\[
+		\sqrt{z} = \sqrt{\frac{a+\sqrt{a^{2} + b^{2}}}{2}} + sgn(b)\sqrt{\frac{-a+\sqrt{a^{2} + b^{2}}}{2}}
+		\]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Polar coordinates of $z$}
+	\centerline{\includegraphics[scale=1]{polar}}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Modulus and coordinates switching}
+	\begin{itemize}
+		\item Modulus of a complex number: 
+		
+		\[
+		R = |z| = \sqrt{a^{2} + b^{2}}
+		\]
+		
+		\item Cartesian coordinates from polar ones:
+		\[
+		a = R\cos\varphi,\, b = R\sin\varphi
+		\]
+		\noindent \ldots and vice versa:
+		\[
+		\varphi = 
+		\left\{
+		\begin{array}{l}
+			\arctan(b/a),\quad a > 0\\
+			\arctan(b/a) + \pi,\quad a < 0,\, b \geq 0\\
+			\arctan(b/a) - \pi,\quad a < 0,\, b < 0\\
+			\pi/2, \quad a = 0,\, b > 0\\
+			-\pi/2, \quad a = 0,\, b < 0\\
+			\textrm{not defined}, \quad a = 0,\, b = 0\\
+		\end{array}
+		\right.
+		\]
+		
+		\item Using all this, we can write:
+		\[
+		z = R(\cos \varphi + i \sin\varphi)
+		\]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Euler's formula}
+	\begin{itemize}
+		\item Stated:
+		\[
+		z = e^{i\varphi}
+		\]
+		\item How it is derived?
+		\item First, recall the idea of Taylor series expansion
+		\item Let the function $f(x)$ be infinitely differentiable at the point $a$\footnote{$a$ can be a real or a complex number}
+		\item Then $f(x)$ is equal to:
+		\[
+		f(x) = f(a) + \frac{f'(a)}{1!}(x-a) + \frac{f''(a)}{2!}(x-a)^{2} + \frac{f'''(a)}{3!}(x-a)^{3} + \ldots
+		\]
+		\item MacLaurin series expansion is Taylor series expansion at the point 0:
+		\[
+		f(x) = f(0) + \frac{f'(0)}{1!}x + \frac{f''(0)}{2!}x^{2} + \frac{f'''(0)}{3!}x^{3} + \ldots
+		\]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Euler's formula (2)}
+	\begin{itemize}
+		\item Take the MacLaurin expansions of $\sin x, \cos x$, and $e^z$
+		\[
+		\begin{array}{lcl}
+			\sin x & = & \displaystyle \sum_{n=0}^{\infty}\frac{(-1)^n}{(2n+1)!}x^{2n+1}=x-\frac{x^3}{3!}+\frac{x^5}{5!}-\cdots\\
+			\quad\\
+			\cos x & = & \displaystyle \sum_{n=0}^{\infty}\frac{(-1)^n}{(2n)!}x^{2n}=1-\frac{x^2}{2!}+\frac{x^4}{4!}-\cdots\\
+			\quad\\
+			e^z & = & \displaystyle \sum_{n=0}^{\infty}\frac{z^n}{n!}=1+z+\frac{z^2}{2!}+\frac{z^3}{3!}+\cdots		
+		\end{array}
+		\]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Euler's formula (3)}
+	\begin{itemize}
+		\item Now take $z = ix$ and substitute it in the MacLaurin expansion of $e^{z}$:
+		\[
+		\begin{array}{lcl}
+			e^{ix}& = & \displaystyle \sum_{n=0}^{\infty}\frac{(ix)^n}{n!}=1 + ix +\frac{(ix)^2}{2!}+\frac{(ix)^3}{3!}+\cdots\\
+			\quad\\
+			& = & \displaystyle 1+ix-\frac{x^2}{2!}-i\frac{x^3}{3!}+\frac{x^4}{4!}+i\frac{x^5}{5!}-\cdots\\
+			\quad\\
+			& = & \displaystyle 1-\frac{x^2}{2!}+\frac{x^4}{4!}+\cdots +i\left(x-\frac{x^3}{3!}+\frac{x^5}{5!}-\cdots\right)\\
+			\quad\\
+			& = & \cos x+i\sin x
+		\end{array}
+		\]
+		\item Now it is easy to switch from $x$ to $\varphi$ in the formula
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Euler's formula (4)}
+	\begin{itemize}
+		\item $e^{i\varphi}$ can be considered as the unit complex number (i.e. having unit modulus); obviously, it lies on the unit circumference
+		\item Any complex number $z = a + bi$ and its conjugate $\overline{z} = a - bi$ can then be written as:
+		\[
+		\begin{array}{lcl}
+			z = R(\cos \varphi + i \sin\varphi) = R e^{i\varphi}\\
+			\overline{z} = R(\cos \varphi - i \sin\varphi) = R e^{-i\varphi}
+		\end{array}
+		\]
+		
+		This is especially useful in multiplying and dividing complex numbers:
+		
+		\[
+		z_{1}z_{2} = R_{1}R_{2}(\cos(\varphi_{1} + \varphi_{2}) + i\sin(\varphi_{1} + \varphi_{2}))
+		\]
+		\[
+		\frac{z_{1}}{z_{2}} = \frac{R_{1}}{R_{2}}(\cos(\varphi_{1} - \varphi_{2}) + i\sin(\varphi_{1} - \varphi_{2}))
+		\]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Euler's formula (5)}
+	\begin{itemize}
+		\item de Moivre's theorem: 
+		\[
+		(\cos\varphi + i \sin\varphi)^{n} = \cos (n\varphi) + i \sin(n\varphi)
+		\]
+		
+		\item Quick derivation of the result of the theorem:
+		\[
+		(\cos\varphi + i \sin\varphi)^{n} = (e^{i\varphi})^{n} = e^{i(n\varphi)} = \cos (n\varphi) + i \sin(n\varphi)
+		\]	
+		
+		\item \noindent This is very convenient in compounding complex numbers in particular:
+		
+		\[
+		z^{n} = R^{n} e^{ni\varphi} = R^{n}(\cos (n\varphi) + i \sin(n\varphi))
+		\]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Polynomial equations}
+	\begin{itemize}
+		\item The degree of the polynomial defines the number of solutions (roots)
+		\item For example, a 5th-degree polynomial has 5 solutions (roots)
+		\item If a complex number is a root of a polynomial, then its conjugate is also a root
+		\item How to solve in Matlab or GNU Octave:
+		\begin{lstlisting}[style = rstyle, breaklines]
+		p = [1 -2 8]
+		r = roots(p)
+		\end{lstlisting}
+		\item How to solve the same in R:
+		\begin{lstlisting}[style = rstyle, breaklines]
+		polyroot(c(8, -2, 1))
+		\end{lstlisting}
+		\item \textcolor{red}{Note: In Maltab coefficients are specified in the decreasing order of powers; in R the increasing order is used}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{The unit circle}
+	\begin{itemize}
+		\item It is important where a complex number lies with respect to the unit circle -- inside, outside, or on the circumference
+		\centerline{\includegraphics[scale=0.5]{circle}}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{The above problem solved by hand}
+	Solve the equation:
+	\[
+	x^{2} - 2x + 8 = 0
+	\]
+	
+	\underline{Solution:}
+	
+	The discriminant is $D = 4 - 4\times 8 = -28 < 0$. Its square root is $\sqrt{D} = 2\sqrt{7\times (-1)}$. This is equivalent to $2i\sqrt{7}$. The solutions of the equation are the two complex conjugates:
+	
+	\[
+	x_{1,2} = 1 \pm i\sqrt{7}
+	\]
+	
+	In polar form:
+	
+	The modulus equals $R = \sqrt{1^2 +(\sqrt{7})^{2}} = \sqrt{8} = 2\sqrt{2}$. Then $\cos\varphi = a/R = \displaystyle\frac{1}{2\sqrt{2}} = \frac{\sqrt{2}}{2}$, and $\sin\varphi = b/R = \displaystyle\frac{\sqrt{7}}{2\sqrt{2}} = \frac{\sqrt{14}}{2}$. 
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Two more problems to solve}
+	\begin{itemize}
+		\item Find $\ln(3 - 1.45i)$
+		\item Find all solutions to $z^{5} = 6i$ 
+		\item Find all roots to $z^{5} = -32$ 
+	\end{itemize}
+\end{frame}
+
+
+\end{document}

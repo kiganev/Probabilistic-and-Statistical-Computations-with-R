@@ -1,4 +1,11 @@
+# Clear wortkspace
 rm(list = ls())
+
+# Clear plots
+check_dev <- dev.list()
+if(!is.null(check_dev)){
+  dev.off(dev.list()["RStudioGD"])  
+}
 
 # Get location of current script
 fileloc <- dirname(rstudioapi::getSourceEditorContext()$path)
@@ -7,7 +14,7 @@ fileloc <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(fileloc)
 
 # Remove fileloc string
-rm(fileloc)
+rm(fileloc, check_dev)
 
 # Set locale
 Sys.setlocale("LC_ALL","English")
@@ -18,6 +25,7 @@ A
 
 # Another one
 B <- matrix(13:24, nrow = 3)
+B
 
 # Addition and subtraction
 C <- A + B
@@ -30,7 +38,6 @@ E <- t(A)
 A
 E
 
-
 # Scalar multiplication
 F <- 5 * A
 A
@@ -41,6 +48,8 @@ G <- A %*% E
 G
 
 crossprod(A, B)
+
+t(A) %*% B
 
 # Diagonal matrix:
 D <- diag(c(1,2,3))
@@ -54,14 +63,17 @@ tr(I)
 # Determinant
 det(G)
 G
+solve(G)
 
 W <- matrix(c(7, 15, 6, 8, 9, 12, 6, 10, 3), 
             nrow = 3, byrow =  T)
 det(W)
 
 # Inverse
+set.seed(2022)
 A <- matrix(rnorm(9), nrow = 3)
 A
+det(A)
 solve(A)
 
 # Solve systems n x n
@@ -72,6 +84,12 @@ b <- c(1.8, 2.1, 3.0)
 b
 x <- solve(A, b)
 x
+
+A1 <- matrix(c(1.8, 2.1, 3.0, 3.3, 9.5, 6.8, 1.9, 5.4, 8.2), nrow = 3)
+det(A1)
+
+x1 <- det(A1)/det(A)
+x1
 
 b1 <- c(0,0,0)
 x <- solve(A, b1)
@@ -86,7 +104,8 @@ dotp
 
 library(Matrix)
 E
-rankMatrix(E)
+rnk <- rankMatrix(E)
+rnk
 
 # Eigenvalues and eigenvectors
 A1 <- matrix(c(6,5,3,8), nrow = 2)
@@ -102,9 +121,6 @@ eigvect <- eigen(A)$vectors
 
 eigval
 eigvect
-
-
-
 
 z <- -6*eigvect/eigvect[1,1]
 z
@@ -123,4 +139,6 @@ LAMBDA <- diag(eigen(A)$values)
 LAMBDA
 
 P %*% LAMBDA %*% solve(P)
+
+polyroot(c(-3, 7.9, -2.9, 3.5, 4))
 

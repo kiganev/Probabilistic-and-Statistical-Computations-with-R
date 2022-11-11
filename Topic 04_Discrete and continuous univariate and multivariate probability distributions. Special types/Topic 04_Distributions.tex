@@ -1,0 +1,1503 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+%\usepackage{gensymb}
+%\usepackage{verbatim}
+\usepackage{mathrsfs}  
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{\mathsf{E}}
+\DeclareMathOperator{\var}{\mathsf{Var}}
+\DeclareMathOperator{\cov}{\mathsf{Cov}}
+\DeclareMathOperator{\corr}{\mathsf{Corr}}
+\DeclareMathOperator{\plim}{plim}
+\DeclareMathOperator{\rank}{rank}
+
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+\lstdefinestyle{rstyle}%
+{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\color{blue},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstset{language=R,frame=single}    
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty
+
+\title{R403: Probabilistic and Statistical Computations\\ with R}
+\subtitle{Topic 4: \textcolor{myred}{Discrete and continuous univariate and multivariate probability distributions. Special types. Working with probability distributions in R}}
+\author{Kaloyan Ganev}
+
+\date{2022/2023} 
+
+\begin{document}
+\maketitle
+
+\begin{frame}[fragile]
+\frametitle{Lecture Contents}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}[fragile]
+\frametitle{Introduction}
+\begin{itemize}
+	\item For a beginning, we will review briefly some basics of probability
+		
+	\item We will then go through some of the probability distributions that are most used in economics
+		
+	\item At the same time, the corresponding R functions will also be discussed
+\end{itemize}
+\end{frame}
+
+\section{A Brief and Superficial Review of Probability}
+\begin{frame}[fragile]
+\frametitle{Sample Space. Events}
+\begin{itemize}
+	\item Assume that outcomes (e.g. of an experiment) are unpredictable in advance
+	
+	\item Yet, the set of all possible outcomes is known. This set is called the \textit{sample space} (denoted by $ S $)
+		
+	\color{blue}		
+	Examples: tossing a coin, rolling a die, etc.
+		
+	\color{black}
+	\item Any subset of $ S $ is called an \textit{event}
+	
+	\color{blue}
+	Examples: get heads when a coin is tossed; get heads on two coins tossed, etc.
+		
+	\color{black}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Sample Space. Events (2)}
+\begin{itemize}
+	\item Union of events:
+	\[
+		A \cup B; \quad \bigcup_{i=1}^{n}A_{i}
+	\]
+	
+	\item Intersection of events:
+	\[
+		A \cap B; \quad \bigcap_{i=1}^{n}A_{i}
+	\]
+	
+	\item Mutually exclusive events:
+	\[
+		A \cap B = \emptyset
+	\]
+		
+	\item Complement of an event $ A $:
+	\[
+		\overline A : \textrm{all elements of } S \textrm{ that are not in } A
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Probability Defined on Events}
+\begin{itemize}
+	\item Let $ A $ be any event from $ S $
+		
+	\item Then, probability is a number $ P(A) $ defined for $ A $ such that
+	\begin{enumerate}
+		\item $ 0 \leq P(A) \leq 1 $
+			
+		\item $ P(S) = 1 $
+			
+		\item If $ A_{1}, A_{2}, \ldots $ is a sequence of events and $ A_{i}\cap A_{j} = \emptyset, \ i \neq j $, then
+		\[
+			P\left(\bigcup_{i=1}^{\infty}A_{i}\right) = \sum_{i=1}^{\infty} P(A_{i}) 
+		\]
+	\end{enumerate}
+	
+	\item At the intuitive level, the probability of an event is the frequency of its occurrence
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Probability Defined on Events (2)}
+\begin{itemize}
+	\item It is always true that $ A \cap \overline{A} = \emptyset $ and $ A \cup \overline{A} = S $
+		
+	\item Therefore,
+	\[
+		P(A \cup \overline{A}) = P(A) + P(\overline{A}) = P(S) = 1 
+	\]
+	
+	\item The latter implies
+	\[
+		P(A) = 1 - P(\overline{A})
+	\]
+		
+	\item Probability of union of two events:\footnote{This can be generalized to more than two events but the formula is spared here.}
+	\[
+		P(A \cup B) = P(A) + P(B) - P(A\cap B)
+	\]
+		
+	\item For mutually exclusive events the latter becomes
+	\[
+		P(A \cup B) = P(A) + P(B)
+	\]
+		
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Conditional Probability}
+\begin{itemize}
+	\item Take events $ A $ and $ B $; the probability
+	\[
+		P(B|A)
+	\]
+	is the probability of $ B $ given that $ A $ already occurred
+	
+	\item In fact, $ A $ is a subset of elements of the entire sample set
+	
+	\item Here, as the condition is that specifically $ A $ occurred, $ A $ itself becomes the sample set
+	
+	\item So in order to asses the conditional probability of $ B $ given $ A $, we have to calculate the frequency of $ B \cap A (= A\cap B) $ occurring relative to the frequency of $ A $ occurring, i.e.
+	\[
+		P(B|A)  = \dfrac{P(A \cap B)}{P(A)}, \quad P(A) > 0
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Conditional Probability (2)}
+\begin{itemize}
+	\item The latter implies
+	\[
+		P(A\cap B)  = P(B|A)P(A) = P(A|B)P(B)
+	\]
+	
+	\item It is also then true that
+	\[
+		\begin{array}{lcl}
+			P(B|A) \geq 0\\
+			\quad\\
+			P(A|A) = 1\\
+			\quad\\
+			\displaystyle P(\bigcup_{i=1}^{\infty} B_{i}|A ) = \sum_{i = 1}^{\infty} P(B_{i}|A),\quad \textrm{if } B_{1}, B_{2},\ldots \textrm{ are mutually exclusive}
+		\end{array}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Independence}
+\begin{itemize}
+	\item $ A $ and $ B $ are independent if
+	\[
+		P(A\cap B) = P(A)P(B)
+	\]
+		
+	\item This implies that $ A $ and $ B $ are independent if
+	\[
+		P(B|A) = P(B)
+	\]
+		
+	\item If $ A $ and $ B $ are not independent, they are called \textit{dependent}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{The Bayes Formula}
+	\begin{itemize}
+		\item From $ P(A\cap B)  = P(B|A)P(A) = P(A|B)P(B) $ follows that
+		\[
+			P(A|B) = \dfrac{P(B|A)P(A)}{P(B)}, \quad P(B) \neq 0 \quad \textrm{(Bayes formula)}
+		\]
+		
+		\item Law of total probability:  if $ \displaystyle \left\{B_{i}:\ i=1,2,3,\ldots \right\}$ is a finite or countable partition of a sample space (i.e. all $ B_{i} $ are pairwise disjoint), then if $ A $ is on the same probability space,
+		\[
+			P(A) = \sum_{i} P(A|B_{i})P(B_{i})
+		\]
+		
+		\item Using this, the Bayes formula can be written also as
+		\[
+			P(A|B) = \dfrac{P(B|A)P(A)}{\displaystyle\sum_{i} P(B|A_{i})P(A_{i})}
+		\]
+	\end{itemize}
+\end{frame}
+
+\section{Random Variables}
+\begin{frame}[fragile]
+\frametitle{Random Variables}
+\begin{itemize}
+	\item Random variables are functions that map events from a sample space to real numbers
+		
+	\item Indicator random variable:
+	\[
+		I = 
+		\left\{
+			\begin{array}{lcl}
+				1, \quad \textrm{if a property is present}\\
+				0, \quad \textrm{if a property is absent}\\
+			\end{array}
+		\right.
+	\]
+		
+	\item \textbf{Discrete} random variable: can take on a finite or countable number of values
+		
+	\item \textbf{Continuous} random variable: can take on a continuum of values
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Random Variables (2)}
+\begin{itemize}
+	\item Cumulative distribution function (cdf):
+	\[
+		F(x) = P(X \leq x)
+	\]
+	
+	\item Properties of cdf:
+	\begin{itemize}
+		\item $ F(x) $ is non-decreasing
+			
+		\item $ \lim_{x\to\infty} F(x) = F(\infty) = 1$
+			
+		\item $ \lim_{x\to - \infty} F(x) = F(-\infty) = 0$
+	\end{itemize}
+	
+	\item Implication:
+	\[
+		P(a < X \leq b) = F(b) - F(a)
+	\]
+		
+	\item Quantiles: values of the random variable that correspond to a given value of the cdf\footnote{You can think of the quantile function as of the inverse of the cdf.}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Random Variables (3)}
+\begin{itemize}
+	\item The term \textit{cdf} is often used interchangeably with the term \textit{probability distribution}
+		
+	\item Both in fact stand for a mathematical model of probability, i.e. the rule by which we assign probabilities to values (events)
+		
+	\item Knowledge on distributions is used in hypotheses testing, for example
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Expectation of a Random Variable}
+\begin{itemize}
+	\item Discrete:
+	\[
+		\E(X) = \sum_{x:\ p(x) > 0} x\cdot p(x)
+	\]
+		
+	\item Continuous:
+	\[
+		\E(X) = \int_{-\infty}^{\infty} x\cdot f(x) \, dx
+	\]
+		
+	\item Let $ g(\cdot) $ be a real-valued function; then:
+	\[
+		\begin{array}{lcl}
+			\displaystyle \E(g(X)) = \sum_{x:\ p(x) > 0} g(x)\cdot p(x)\\
+			\quad\\
+			\displaystyle \E(g(X)) = \int_{-\infty}^{\infty} g(x)\cdot f(x) \, dx
+		\end{array}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Expectation of a Random Variable (2)}
+\begin{itemize}
+	\item $ \E(X) $ is also called the \textit{mean} of a random variable
+		
+	\item $ \E(X^{n}) $ is called the \textit{n}th \textit{moment} of a random variable
+		
+	\item If $ a $ and $ b $ are constants,
+	\[
+		\E(aX + b) = a\E(X) + b
+	\]
+		
+	\item Variance:
+	\[
+		\var(X)  = \E[X - \E(X)]^{2} = \E(X^{2}) - [E(X)]^{2}
+	\]
+	
+	\item An important relationship
+	\[
+		\var(X) = \E[\var(X|Y)] + \var[\E(X|Y)]
+	\]
+	
+	\item Law of iterated expectations:
+	\[
+		\E(X) = \E[\E(X|Y)]
+	\]
+\end{itemize}
+\end{frame}
+
+\subsection{Discrete Random Variables}
+\begin{frame}[fragile]
+\frametitle{Discrete Random Variables}
+\begin{itemize}
+	\item Probability mass function (pmf):
+	\[
+		p(x)  = P(X = x)
+	\]
+		
+	\item The pmf is positive for a countable number of values of $ X $; for the remaining ones it is zero
+		
+	\item Property:
+	\[
+		\sum_{i = 1}^{\infty}p(x_{i}) = 1
+	\]
+		
+	\item cdf:
+	\[
+		F(x) = \sum_{x_{i} \leq x} p(x_{i})
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Bernoulli Random Variables}
+\begin{itemize}
+	\item Characterize experiments in which the outcome is classified either as a \textit{success} (1) or as a \textit{failure} (0)
+		
+	\color{blue}
+	Example: tossing a coin
+		
+	\color{black}
+	\item pmf (for $ p \in (0,1) $):
+	\[
+		\begin{array}{lcl}
+			p(0) = P(X = 0) = 1 - p\\
+			p(1) = P(X = 1) = p
+		\end{array}
+	\]
+		
+	Can be written also as
+	\[
+		p(x) = p^{x}(1-p)^{1-x}
+	\]
+		
+	\item cdf:
+	\[
+		F(x) = 
+		\left\{
+		\begin{array}{lcl}
+			0, \quad x < 0\\
+			1 - p, \quad 0 \leq x < 1\\
+			p, \quad x \geq 1
+		\end{array}
+	\right.
+	\]	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Bernoulli Random Variables (2)}
+\begin{itemize}
+	\item Mean:
+	\[
+		E(X) = 0\cdot (1 - p) + 1\cdot p = p
+	\]
+	
+	\item Variance:
+	\[
+		\begin{array}{lcl}
+			\var(X) & = & (0 - p)^{2}\cdot (1 - p) + (1 - p) ^{2}\cdot p = \\
+			\quad\\
+			& = & p^{2}\cdot (1 - p) + (1 - p) ^{2}\cdot p = \\
+			\quad\\
+			& = & (1 - p)\cdot(p^{2} + p - p^{2}) = p\cdot (1 - p)
+		\end{array}
+	\]
+	
+	\item Bernoulli random variables are a special case of the binomial ones
+	
+	\item Therefore we will postpone R simulation for later	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Binomial Random Variables}
+\begin{itemize}
+	\item The binomial distribution shows the number of successes in $n$ \emph{independent}\footnote{If the experiment implies sampling, then there is replacement of elements.} Bernoulli trials
+		
+	\item Specifically, the probability of $x$ successes in $n$ trials (the pmf) is:
+	\[
+		p(x) = \dbinom{n}{x} p^{x}(1-p)^{n-x}
+	\] 
+	
+	\item cdf:
+	\[
+		F(x) = P(X \leq x) = \sum_{i = 1}^{x}\dbinom{n}{i} p^{i}(1-p)^{n-i}
+	\]
+		
+	\item Mean: $ np $
+	
+	\item Variance: $ np(1 - p) $
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Binomial Random Variables (2)}
+\begin{itemize}
+	\item \textcolor{blue}{Example problem:} Find the probability of getting heads two times out of ten fair coin tosses
+		
+	\item Obviously, we have to use the pmf to solve it
+		
+	\item We will go to R for the solution:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dbinom(2, 10, 0.5, log = FALSE)
+	\end{lstlisting}
+	
+	\item \textcolor{blue}{Example problem:} What is the probability of \textcolor{red}{not} getting a pass (60\%) if you answer randomly at an exam in which there are 20 multiple-choice questions (the number of options is 4)?
+		
+	\item Solution using the cdf:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	pbinom(11, 20, 0.25, lower.tail = TRUE, log.p = FALSE)
+	\end{lstlisting} 
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Binomial Random Variables (3)}
+\begin{itemize}
+	\item \textcolor{blue}{Example problem:} find the number of correct answers so that your test score is in the 75th percentile
+		
+	\item Solution using the quantile function:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	qbinom(0.75, 20, 0.25, lower.tail = TRUE, log.p = FALSE)
+	\end{lstlisting} 
+	
+	\item Generate 100 random numbers from the binomial distribution, where $p = 0.6$ and $n = 20$:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	rbinom(100, 20, 0.6)
+	\end{lstlisting}
+	
+	\item Plot them:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(rbinom(100, 20, 0.6), type = "p")
+	\end{lstlisting}
+	
+	\item Histogram:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	hist(rbinom(100, 20, 0.6), breaks = 20)
+	\end{lstlisting} 
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Geometric Random Variables}
+\begin{itemize}
+	\item Assume that in independent Bernoulli trials, the probability of success is $ p $
+	
+	\item Problem to solve: What is the probability of getting $ x $ failures before a success occurs?
+		
+	\item The random variable that measures that probability is the \textit{geometric} random variable
+		
+	\item pmf:
+	\[
+		p(x) = P(X = x) = (1 - p)^{x}p, \quad x = 0, 1, 2, \ldots
+	\]
+		
+	\item \textcolor{blue}{Example problem:} What is the probability of tossing 5 times a fair coin and getting tails before we get heads on the sixth toss?
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dgeom(5, 0.5, log=FALSE)
+	\end{lstlisting} 
+	
+	\item \textcolor{red}{Problem to do:} Prove that $ \displaystyle\sum_{x = 0}^{\infty} p(x) = 1$
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Geometric Random Variables (2)}
+\begin{itemize}
+	\item The cdf is:
+	\[
+		F(x) = 1 - (1 - p)^{x+1}\quad x = 1,2,\ldots
+	\]
+
+	\item Example of usage: what is the probability of tossing a coin between zero and five times before getting heads?
+	\begin{lstlisting}[style = rstyle, breaklines]
+	pgeom(5, 0.5, lower.tail = TRUE, log.p = FALSE)
+	\end{lstlisting}
+	\item Quantiles and random number generation:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	qgeom, rgeom
+	\end{lstlisting} 
+	
+	\item Mean: $ \dfrac{1 - p}{p} $
+		
+	\item Variance: $ \dfrac{1 - p}{p^{2}} $
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Hypergeometric Random Variables}
+\begin{itemize}
+	\item The hypergeometric distribution is another special case of the binomial distribution
+		
+	\item Difference: There is no replacement therefore the condition of independence is violated
+		
+	\item The pmf is (measures the probability of $ k $ successes):
+	\[
+		p(x) = \displaystyle\frac{\dbinom{K}{x}\dbinom{N-K}{n-x}}{\dbinom{N}{n}}
+	\]
+	
+	where $N$ is the size of the population, $K$ is the total number of successes in the population.
+	
+	\item cdf: too long to write here :)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Hypergeometric Random Variables (2)}
+\begin{itemize}
+	\item Mean: $ n\cdot\dfrac{K}{N} $
+		
+	\item Variance: $ n\cdot\dfrac{K}{N} \cdot \dfrac{N-K}{N}\cdot \dfrac{N - n}{N - 1}$
+		
+	\item The hypergeometric distribution in $\mathsf{R}$:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dhyper, phyper, qhyper, rhyper
+	\end{lstlisting} 
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Poisson Random Variables}
+\begin{itemize}
+	\item Measures the number of events that occur for a fixed interval of time/space
+		
+	\item Main assumptions:
+	\begin{itemize}
+		\item Each event occurs independently of the time since the last event occurred
+			
+		\item The mean rate of occurrence per unit of time is constant 
+	\end{itemize}
+		
+	\item \textcolor{blue}{Examples:} customers per hour in a shop; accidents per day in a city; raindrops per square centimetre; etc.
+		
+	\item pmf:
+	\[
+		p(x) = \frac{\lambda^{x}e^{-\lambda}}{x!}
+	\]
+	where $\lambda = \E(X) = \var(X)$ is the constant mean rate of occurrence		
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Poisson Random Variables (2)}
+\begin{itemize}
+	\item cdf: also not too pleasant to write, so it's skipped here
+		
+	\item \textcolor{blue}{Example:} 15 cars arrive at a gas station on average per hour. What is the probability that 10 cars arrive during a chosen hour?
+	\[
+		p(10) = P(X = 10) = \frac{15^{10}e^{-15}}{10!} \approx 4.9\%
+	\] 
+		
+	(Obviously, here $ \lambda = 15 $)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Poisson Random Variables (3)}
+\begin{itemize}
+	\item Calculate the same problem in $\mathsf{R}$:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dpois(10, 15, log = FALSE)
+	\end{lstlisting}
+
+	\item Calculate the probability of having 10 or less cars arrive:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	ppois(10, 15, lower.tail = TRUE, log.p = FALSE)
+	\end{lstlisting}
+
+	\item Quantiles and random number generation:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	qpois, rpois
+	\end{lstlisting}
+\end{itemize}
+\end{frame} 
+
+\subsection{Continuous Random Variables}
+\begin{frame}[fragile]
+\frametitle{Continuous Random Variables}
+\begin{itemize}
+	\item The set of possible values is \textit{uncountable}
+		
+	\item Probability density function (pdf): a non-negative function defined for all $ x \in (-\infty, \infty) $
+		
+	\item Denoted by $ f(x) $, has the property that for any $ B \subset \mathbb{R} $,
+	\[
+		P(X \in B) = \int\limits_{B} f(x)\, dx
+	\]
+		
+	\item If $ B = (-\infty, x]  $, then
+	\[
+		P(X \in B) = P (X \leq x) = \int\limits_{-\infty}^{x} f(t) \, dt = F(x)
+	\]
+		
+	is in fact the cdf
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Continuous Random Variables (2)}
+\begin{itemize}
+	\item It is clear that
+	\[
+		F'(x) = f(x)
+	\]
+		
+	\item If $ B = [a, b] $ then
+	\[
+		P(X \in B) = \int\limits_{a}^{b} f(x) \, dx = F(b) - F(a)
+	\]
+		
+	\item Letting $ a = b $ leads to
+	\[
+		P(X \in B) = \int\limits_{a}^{a} f(x) \, dx = F(a) - F(a) = 0
+	\]
+	In other words, the probability of getting a specific value out of infinitely many is zero
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Continuous Random Variables (3)}
+\begin{itemize}
+	\item If $ B = \mathbb{R} $, then
+	\[
+		P(X \in \mathbb{R}) = \int\limits_{-\infty}^{\infty} f(x) \, dx = 1
+	\]
+		
+	The latter implies $ F(\infty)  = 1$ and $ F(-\infty) = 0 $
+		
+	\item Given that $ \displaystyle\int\limits_{a}^{a} f(x) \, dx = 0 $,
+	\[
+		P(X \leq x) = P(X < x)
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Uniform Random Variables}
+\begin{itemize}
+	\item For the interval $ [a, b] $, the pdf is:
+	\[
+		f(x) = 
+		\left\{
+		\begin{array}{l}
+			\displaystyle\frac{1}{b-a}, \quad x \in [a,b]\\
+			\quad\\
+			0,\quad elsewhere
+		\end{array}
+		\right.
+	\]
+	
+	\item The cdf is:
+	\[
+		F(x) = 
+		\left\{
+		\begin{array}{l}
+			0,\quad x < a\\
+			\quad\\
+			\displaystyle\frac{x-a}{b-a}, \quad x \in [a,b)\\
+			\quad\\
+			1,\quad x \geq b
+		\end{array}
+		\right.
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Uniform Random Variables (2)}
+\begin{itemize}
+	\item Mean:
+	\[
+		\E(X) = \dfrac{1}{2}(a + b)
+	\]
+	
+	\item Variance:
+	\[
+		\var(X) = \dfrac{1}{12}(b - a)^{2}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Uniform Random Variables (3)}
+\begin{itemize}
+	\item To calculate density at a given value in R:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dunif(0.7, min = 0, max = 1, log = FALSE)
+	\end{lstlisting}
+
+	\item The minimum and the maximum value of the argument are 0 and 1 respectively by default, so the latter is equivalent to:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dunif(0.7)
+	\end{lstlisting}
+
+	\item To plot the pdf:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(dunif,0,1,main = "The Uniform pdf")
+	\end{lstlisting}
+
+	\item To calculate the cdf.:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	punif(0.7, min = 0, max = 1, lower.tail = TRUE, log.p = FALSE)
+	\end{lstlisting}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Uniform Random Variables (3)}
+\begin{itemize}
+	\item To plot the cdf:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(punif, 0, 1, main = "Uniform cdf")
+	\end{lstlisting}
+
+	\item Calculate median:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	qunif(0.5, min = 0, max = 1, log = FALSE)
+	\end{lstlisting}
+
+	\item Generate 10000 values of a uniformly distributed random variable:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	runif(10000, min = 0, max = 1)
+	\end{lstlisting}
+
+	\item And plot them:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(runif(10000, min = 0, max = 1), type = "l", col = "red", main = "Uniform RV")
+	\end{lstlisting}
+	
+	\item Histogram: 
+	\begin{lstlisting}[style = rstyle, breaklines]
+	hist(runif(10000, min = 0, max = 1), breaks = 50, col = "red", main = "Uniform RV (histogram)")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The Poisson Process}
+\begin{itemize}
+	\item Homogeneous case: the process counts events that occur at a constant rate in time:
+	\[
+		P[N(t+h) - N(t) = k] = \frac{e^{-\lambda h}(\lambda h)^{k}}{k!}, \quad k = 0, 1, 2,\ldots
+	\]
+	
+	\item Non-homogeneous case: the rate of occurrence is not constant; we do not deal with this case
+\end{itemize}
+\end{frame} 
+
+\begin{frame}[fragile]
+\frametitle{Exponential Random Variables}
+\begin{itemize}
+	\item The continuous analogue of geometric random variables
+
+	\item Model the time between events in a Poisson process
+
+	\item The pdf is:
+	\[
+		f(x) = \left\{
+		\begin{array}{l}
+			\lambda e^{-\lambda x}, \quad x \geq 0\\
+			\quad\\
+			0, \quad x < 0
+		\end{array}\right.
+	\]
+	
+	\item $\lambda$ is the mean rate at which events occur, while $\displaystyle \frac{1}{\lambda}$ is the mean waiting time between two events
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Exponential Random Variables (2)}
+	\begin{itemize}
+		\item Mean:
+		\[
+			\E(X) = \dfrac{1}{\lambda}
+		\]
+		
+		\item Variance:
+		\[
+			\var(X) = \dfrac{1}{\lambda^{2}}
+		\]		
+		
+		\item \textcolor{red}{Note:} The exponential distribution is a special case of the gamma distribution (along with the Erlang and the $ \chi^{2} $ distributions)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Exponential Random Variables (3)}
+\begin{itemize}
+	\item Implementation in $\mathsf{R}$:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dexp(2, 0.25) 
+	\end{lstlisting}
+	
+	\item Plot the pdf:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	x <- seq(0,20, by = 0.01)
+	y <- dexp(x,0.25)
+	plot(x,y,type = "l")
+	\end{lstlisting}
+
+	\item The c.d.f. is:
+	\[
+		F(x) = 
+		\left\{
+		\begin{array}{l}
+			1 - e^{-\lambda x}, \quad x \geq 0\\
+			\quad\\
+			0, \quad x < 0
+		\end{array}
+		\right.
+	\]
+		
+	\item Plot the cdf
+	\begin{lstlisting}[style = rstyle, breaklines]
+	y <- pexp(x, 0.25)
+	plot(x, y, type = "l")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Exponential Random Variables (4)}
+\begin{itemize}
+	\item \textcolor{blue}{Example:} Let $x$ be the amount of time that a customer is processed by a cashier at a department store. What is the probability that a customer is processed between 3 and 4 minutes if on average a customer is processed 4 minutes?
+		
+	\item Solution:	We have to find $P(3 < X < 4)$. This is accomplished by:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	pexp(4, 0.25) - pexp(3,0.25)
+	\end{lstlisting}
+
+	\item Next, find the time for which half of the customers are being processed
+	\begin{lstlisting}[style = rstyle, breaklines]
+	qexp(0.5, 0.25)
+	\end{lstlisting}
+	i. e. we found the median time
+\end{itemize}
+\end{frame} 
+
+\begin{frame}[fragile]
+\frametitle{The Gamma Function}
+\begin{itemize}
+	\item An extension of the factorial ($n!$) function
+
+	\item For positive integers:
+	\[
+		\Gamma(n) = (n-1)!
+	\]
+
+	\item For complex numbers with a positive real part:
+	\[
+		\Gamma(z) = \int\limits_{0}^{\infty}x^{z-1}e^{-x}\,dx, \quad Re(z) > 0
+	\]
+
+	\item Not defined for negative integers or complex numbers with negative real part, and also for zero
+\end{itemize}
+\end{frame} 
+
+\begin{frame}[fragile]
+\frametitle{The Gamma Function: Implementation in $\mathsf{R}$}
+\begin{itemize}
+	\item Through the \cc{factorial()} function
+	\item Example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	x <- seq(1, 10, by=.1)
+	y <- factorial(x)
+	plot(x, y, type = "l")
+	\end{lstlisting}
+\end{itemize}
+\end{frame} 
+
+\begin{frame}[fragile]
+\frametitle{Gamma Random Variables}
+\begin{itemize}
+	\item pdf of Gamma distribution with parameters  $ \lambda > 0,\, \alpha > 0 $:
+	\[
+		f(x) = 
+		\left\{
+		\begin{array}{lcl}
+			\dfrac{\lambda e^{-\lambda x}(\lambda x)^{\alpha-1}}{\Gamma(\alpha)}, \quad x \geq 0 \\
+			\quad\\
+			0, \quad x < 0
+		\end{array}
+		\right.
+	\]
+	
+	\item $ \lambda $ is called the \textit{rate} parameter, while $ \alpha $ is called the \textit{shape} parameter
+	
+	\item (Check what happens with the pdf if $ \alpha = 1 $, for example)
+	
+	\item How does it differ from the exponential distribution? It models waiting time for 1 \textit{or more} events ahead\footnote{When only the waiting time to the next event is modelled, this is the case of the exponential distribution.}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Gamma Random Variables (2)}
+\begin{itemize}
+	\item Mean:
+	\[
+		\E(X) = \dfrac{\alpha}{\lambda}
+	\]
+	
+	\item Variance
+	\[
+		\var(X) = \dfrac{\alpha}{\lambda^{2}}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Normal Random Variables} 
+\begin{itemize}
+	\item The  pdf of the normal distribution is given by the formula:
+	\[
+		f(x) = \frac{1}{\sqrt{2\pi\sigma^{2}}}\exp\left(-\frac{(x - \mu)^{2}}{2\sigma^{2}}\right), \quad x \in (-\infty, \infty)
+	\]
+	
+	\item $ \mu $ and $ \sigma^{2} $ are correspondingly the mean and the variance of the normal distribution
+	
+	\item Those two parameters uniquely define each normal distribution
+	
+	\item If $ \mu = 0 $ and $ \sigma^{2} = 1$, then the distribution becomes the \textit{standard normal distribution}
+	
+	\item If $ Y = a + bX $, then
+	\[
+		\begin{array}{lcl}
+			\E(Y) = \E(a + bX) = a + b\mu\\
+			\quad\\
+			\var(Y) = \var(a + bX) = b^{2}\sigma^{2}
+		\end{array}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Normal Random Variables (2)}
+\begin{itemize}
+	\item To see the density at a given value (i. e. the height of the pdf at that value) -- in this case we take as an example the density at 5:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dnorm(5, mean = 0, sd = 1, log = FALSE)	
+	\end{lstlisting}
+	
+	\item In the case of the standard normal pdf, you can issue just:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dnorm(5)
+	\end{lstlisting}
+	
+	\item You can plot the pdf with:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(dnorm,-3,3, main = "Standard normal distribution")
+	\end{lstlisting}
+
+	\item What if you want to plot a `non-standard' normal distribution?
+	\begin{lstlisting}[style = rstyle, breaklines]
+	x <- seq(-20, 20, by=0.1)
+	y <- dnorm(x, mean = 2, sd = 5)
+	plot(x, y, type = "l")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Normal Random Variables (3)}
+\begin{itemize}
+	\item The cdf is the integral of the pdf from $-\infty$ to $x$
+	
+	\item To calculate the cdf:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	pnorm(5, mean = 2, sd = 5, lower.tail = TRUE, log.p = FALSE)
+	\end{lstlisting}
+	
+	\item For example, to find the probability that a value is within 1.96 standard deviations from the mean:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	pnorm(1.96, lower.tail = TRUE) - pnorm(-1.96, lower.tail = TRUE)
+	\end{lstlisting}
+
+	\item To plot the normal cdf:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(pnorm, -5, 5, main = "Normal cdf")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Normal Random Variables (4)}
+\begin{itemize}
+	\item The quantile function is the inverse of the distribution -- it gives the value $x$ at which $P(X\leq x) = p$, where $p$ is pre-specified
+	
+	\item It is implemented via:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	qnorm(0.25, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
+	\end{lstlisting}
+	
+	\item For example, this can be used to find the median of the standard normal distribution:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	qnorm(0.5)
+	\end{lstlisting}
+	\item \ldots or to find the lower and upper bounds of a 95\% confidence interval:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	c(qnorm(0.025),qnorm(0.975))
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Normal Random Variables (5)}
+\begin{itemize}
+	\item To generate a normal random variable with 10000 values:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	rnorm(10000, mean = 2, sd = 5)
+	\end{lstlisting}
+	
+	\item To plot such a variable:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(rnorm(10000, mean = 2, sd = 5), type = "l", col = "blue", main = "White noise")
+	\end{lstlisting}
+	
+	\item To plot its histogram:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	hist(rnorm(10000, mean = 2, sd = 5), breaks = 50, col = "orange")
+	\end{lstlisting}
+\end{itemize}
+\end{frame} 
+
+\begin{frame}[fragile]
+\frametitle{The $\chi^{2}$ Distribution}
+\begin{itemize}
+	\item Let $X_{1}, \ldots, X_{k}$ be $k$ independent standard normal random variables. Then: 
+	\[
+		(X_{1}^{2} + \ldots + X_{k}^{2}) \sim \chi^{2} (k)
+	\]
+
+	\item Read as ``chi-square distribution with $k$ degrees of freedom''
+
+	\item Main usage: for hypotheses testing or for construction of confidence intervals
+
+	\item \textcolor{red}{Note:} We are considering the so-called centred chi-square distribution; it is generalized in its non-centred version
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The $\chi^{2}$ Distribution (2)}
+\begin{itemize}
+	\item The pdf is:
+	\[
+		f(x,k) = 
+		\left\{
+		\begin{array}{l}
+			\displaystyle\frac{x^{\frac{(k-2)}{2}}e^{-\frac{x}{2}}}{2^{\frac{k}{2}}\Gamma\left(\frac{k}{2}\right)},\quad x \geq 0\\
+			\quad\\
+			0,\quad \textrm{otherwise}
+		\end{array}
+		\right.
+		\]
+
+	\item Note that the $ \chi^{2} $ distribution is a special case of the gamma distribution where $ t = \dfrac{k}{2} $ and $ \lambda = \dfrac{1}{2} $
+
+	\item $\mathsf{R}$ implementation:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dchisq(3, 5)
+	\end{lstlisting}
+
+	\item Plot the pdf:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	x <- seq(0, 20, by = 0.01)
+	y <- dchisq(x, 5)
+	plot(x, y, type="l")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The $\chi^{2}$ Distribution (3)}
+\begin{itemize}
+	\item The cdf is:
+	\[
+		F(x,k) = 	\frac{\gamma\left(\frac{k}{2},\frac{x}{2}\right)}{2^{k/2}\Gamma\left(\frac{k}{2}\right)}
+	\]
+	where $\gamma$ is the lower incomplete gamma function defined as:
+	
+	\[
+		\gamma(s,x) = \int\limits_{0}^{x}t^{s-1}e^{t}dt
+	\]
+	
+	\item Implementation in $\mathsf{R}$:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	pchisq(3, 5)
+	\end{lstlisting}
+	
+	\item Plot the cdf:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	x <- seq(0, 20, by = 0.01)
+	y <- pchisq(x, 5)
+	plot(x, y, type = "l")
+	\end{lstlisting}
+	
+	\item Quantiles and random numbers:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	qchisq, rchisq
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The Beta Function}
+\begin{itemize}
+	\item Known also as `the Euler integral'
+
+	\item Defined as:
+	\[
+		B(x, y) = \int_{0}^{1}t^{x-1}(1-t)^{y-1}dt
+	\]
+	where $x$ and $y$ are complex numbers having positive real parts.
+\end{itemize}
+\end{frame}
+ 
+\begin{frame}[fragile]
+\frametitle{The $F$ Distribution}
+\begin{itemize}
+	\item If $X_{1} \sim \chi^{2}(k_{1})$ and $X_{2} \sim \chi^{2}(k_{2})$, then $\displaystyle \frac{X_{1}/k_{1}}{X_{2}/k_{2}} \sim F(k_{1},k_{2})$
+
+	\item Used mainly in hypotheses testing
+
+	\item pdf:
+	\[
+		f(x,k_{1},k_{2}) = \sqrt{\frac{(k_{1}x)^{k_{1}}\,k_{2}^{k_{2}}}{xB\left(\frac{k_{1}}{2},\frac{k_{2}}{2}\right)}}
+	\]
+
+	\item $\mathsf{R}$ implementation:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	df(3, 2, 5)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The $F$ Distribution (2)}
+\begin{itemize}
+	\item The c.d.f.:
+	\[
+		F(x,k_{1},k_{2}) = I_{\frac{k_{1}x}{k_{1}x + k_{2}}}\left(\frac{k_{1}}{2},\frac{k_{2}}{2}\right)
+	\]
+	where $I$ is the regularized incomplete beta function (we will leave these complications to your own curiosity)
+
+	\item In $\mathsf{R}$:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	pf(3, 2, 5)
+	\end{lstlisting}
+
+	\item Quantiles, random variables:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	qf, rf
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The $t$ Distribution}
+\begin{itemize}
+	\item Arises in estimating the mean of a normally distributed variable when sample size is small and the population variance is unknown
+
+	\item Used in statistical tests, linear regression analysis, confidence interval construction, etc.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The $t$ Distribution (2)}
+\begin{itemize}
+	\item Consider the random variable $x$. Let the sample size is $n$ and sampling is from a normally distributed population with population mean $\mu$
+
+	\item Let the sample mean of the random variable be:
+	\[
+		\overline{x} = \frac{1}{n}\sum_{i=1}^{n} x_{i}
+	\]
+
+	\item and let the sample variance be:
+	\[
+		s^{2} = \frac{1}{n-1}\sum_{i=1}^{n} (x_{i} - \overline{x})^{2}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The $t$ Distribution (3)}
+\begin{itemize}
+	\item The statistic:
+	\[
+		t = \frac{\overline{x} - \mu}{s/\sqrt{n}}
+	\]
+	has $t$ distribution with $n-1$ degrees of freedom
+
+	\item Interpreted as the distribution of the difference between the population mean and the sample mean divided by the sample standard deviation (the latter normalized by $\sqrt{n}$)
+
+	\item Continuous distribution, symmetrical
+
+	\item The pdf is:
+	\[
+		f(t) = \frac{\Gamma\left(\frac{n}{2}\right)}{\sqrt{(n-1)\pi}\Gamma\left(\frac{n-1}{2}\right)}\left(1 + \frac{t^{2}}{n-1}\right)^{-\frac{n}{2}}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The $t$ Distribution (4)}
+\begin{itemize}
+	\item $\mathsf{R}$ implementation:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dt(0, 15)
+	\end{lstlisting}
+	
+	\item Plot the pdf:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	x <- seq(-20, 20, by = 0.01)
+	y = dt(x, 99)
+	plot(x, y, type = "l")
+	\end{lstlisting}
+
+	\item The c.d.f.: again too long to write; implementation in $\mathsf{R}$:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	pt(0, 15)
+	\end{lstlisting}
+	
+	\item Quantiles and random number generation:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	qt, rt
+	\end{lstlisting}
+\end{itemize}
+\end{frame} 
+
+\section{Multivariate Distributions}
+\begin{frame}[fragile]
+\frametitle{What is a Multivariate Distribution?}
+\begin{itemize}
+	\item Similarly to the univariate case, a multivariate probability distribution is a model of probability
+
+	\item However, this model describes more than one random variable at a time
+
+	\item In other words, instead of having a scalar random variable, we work with a random vector
+
+	\item A synonym of \textit{multivariate distribution} is \textit{joint distribution}
+
+	\item The latter is maybe more informative since it captures the potential interaction of random variables
+\end{itemize}
+\end{frame} 
+
+\begin{frame}[fragile]
+\frametitle{The Joint Probability Distribution}
+\begin{itemize}
+	\item Take the random vector $(X_{1}, X_{2},\ldots, X_{n})$
+
+	\item The joint probability distribution gives the probability that each of the random variables takes a specific value or falls in a specified range
+
+	\item Joint probability distributions are expressed through:
+	\begin{itemize}
+		\item Their joint cumulative distribution function (cdf)
+		\item Their joint probability density function (pdf)/probability mass function (pmf)
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The Joint cdf, pdf, and pmf}
+\begin{itemize}
+	\item Joint cdf:
+	\[
+		\begin{array}{lcl}
+			F_{X_{1},X_{2},\ldots,X_{n}}(x_{1},x_{2},\ldots,x_{n}) = P(X_{1} \leq x_{1}, X_{2} 	\leq x_{2},\ldots, X_{n} \leq x_{n})
+		\end{array}
+	\]
+	
+	\item Joint pmf (discrete case):
+	\[
+		p_{X_{1},X_{2},\ldots,X_{n}}(x_{1},x_{2},\ldots,x_{n}) = P(X_{1} = x_{1}, X_{2} = x_{2},\ldots, X_{n} = x_{n})
+	\]
+	
+	\item Joint pdf (continuous case)
+	\[
+		f_{X_{1},X_{2},\ldots,X_{n}}(x_{1},x_{2},\ldots,x_{n}) = \dfrac{\partial F_{X_{1},X_{2},\ldots,X_{n}}(x_{1},x_{2},\ldots,x_{n}) }{\partial x_{1}\partial x_{2}\ldots \partial x_{n}}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Example: Multivariate Normal}
+\begin{itemize}
+	\item pdf:
+	\[
+		f_{\mathbf X}(x_1,\ldots,x_{n}) = \frac{\exp\left(-\frac 1 2 ({\mathbf x}-{\boldsymbol\mu})^\mathrm{T}{\boldsymbol\Sigma}^{-1}({\mathbf x}-{\boldsymbol\mu})\right)}{\sqrt{(2\pi)^{n}|\boldsymbol\Sigma|}}
+	\]
+	where $\mathbf X = (X_{1}, X_{2},\ldots, X_{n})$
+
+	\item No analogical capabilities in base R
+
+	\item The \textbf{mvtnorm} package: for working with multivariate $t$ and normal distributions
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{R Example: Bivariate Normal}
+\begin{itemize}
+	\item Calculate density:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(mvtnorm)
+			
+	sigmamat <- matrix(c(1, 0.6, 0.6, 1), nrow = 2)
+	sigmamat
+			
+	dmvnorm(x = c(1,2), mean = c(0.05, -0.05), sigma = sigmamat)	
+	\end{lstlisting}
+	
+	\item Cumulative:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	pmvnorm(lower = -Inf, upper = c(1,2), mean = c(0.05, -0.05), sigma = sigmamat)	
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{R Example: Bivariate Normal (2)}
+\begin{itemize}
+	\item Random number generation, correlated variables:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	rvec1 <- rmvnorm(n = 10000, mean = c(0.05, -0.05), sigma = sigmamat)
+	rvec1 <- as.data.frame(rvec1)	
+	\end{lstlisting}
+
+	\item See the following slide for a picture
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{R Example: Bivariate Normal (3)}
+\begin{center}
+	\includegraphics[scale=0.35]{fig1}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{R Example: Bivariate Normal (4)}
+\begin{itemize}
+	\item Same but if the two variables are uncorrelated
+	\begin{lstlisting}[style = rstyle, breaklines]
+	sigmamat2 <- matrix(c(1, 0, 0, 1), nrow = 2)
+	sigmamat2
+			
+	rvec2 <- rmvnorm(n = 10000, mean = c(0.05, -0.05), sigma = sigmamat2)
+	rvec2 <- as.data.frame(rvec2)	
+	\end{lstlisting}
+	
+	\item See next picture
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{R Example: Bivariate Normal (5)}
+\begin{center}
+	\includegraphics[scale=0.35]{fig2}
+\end{center}
+\end{frame} 
+
+\begin{frame}[fragile]
+	\frametitle{References}
+	\begin{itemize}
+		\item \href{https://towardsdatascience.com/gamma-distribution-intuition-derivation-and-examples-55f407423840}{Gamma Distribution — Intuition, Derivation, and Examples}
+		
+		\item Hogg, R., McKean, J., and A. Craig (2018): \textit{Introduction to Mathematical Statistics}, Pearson, 8th ed.
+		
+		\item Krishnamoorty, K. (2016): \textit{Handbook of	Statistical Distributions with Applications}, CRC Press, 2nd ed.
+		
+		\item Pinsky, M., and S. Karlin (2010): \textit{An Introduction to Stochastic Modelling}, Academic Press, fourth ed.
+		
+		\item Ross, S. (2014): \textit{A First Course in Probability}, Peason, 9th ed.
+		
+		\item Ross, S. (2019): \textit{Introduction to Probability Models}, Academic Press, 12th ed.		
+	\end{itemize}
+\end{frame}
+
+
+
+\end{document}

@@ -1,0 +1,526 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+%\usepackage{gensymb}
+%\usepackage{verbatim}
+\usepackage{mathrsfs}  
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{\mathsf{E}}
+\DeclareMathOperator{\var}{\mathsf{Var}}
+\DeclareMathOperator{\cov}{\mathsf{Cov}}
+\DeclareMathOperator{\corr}{\mathsf{Corr}}
+\DeclareMathOperator{\plim}{plim}
+\DeclareMathOperator{\rank}{rank}
+
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+\lstdefinestyle{rstyle}%
+{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\color{blue},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstset{language=R,frame=single}    
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty
+
+\title{R403: The R Language for Statistical Computing}
+\subtitle{Topic 3: \textcolor{myred}{Reading from and Writing to External Data Sources}}
+\author{Kaloyan Ganev}
+
+\date{2022/2023} 
+
+\begin{document}
+\maketitle
+
+\begin{frame}[fragile]
+\frametitle{Lecture Contents}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}[fragile]
+\frametitle{Introductory notes}
+\begin{itemize}
+	\item In statistics, we rarely work with small amounts of data allowing manual entry
+	\item Most often data are contained in readily-available tables
+	\item This information needs to be brought inside R so that it is processed and analysed
+	\item Analysis of output is also substantial so there is the need to export it quickly and flawlessly to outer information storage
+	\item We will demonstrate a number of tools designed for the above-mentioned tasks
+\end{itemize}
+\end{frame}
+
+\section{Reading and writing text files}
+\begin{frame}[fragile]
+\frametitle{The \cc{read.table()} function}
+\begin{itemize}
+	\item We take a real dataset: Airline routes database (from \url{http://openflights.org/data.html})
+	\item The file name is \texttt{routes.txt}
+	\item \textcolor{red}{Note: You can also read files directly from their url!}
+	\item Take a look at the file in a text editor (get a decent one, such as Notepad++, for example, don't count on Notepad)
+	\item We will read the data in the following way:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	routes.df <- read.table("routes.txt", 
+		delim = ",", header = FALSE)
+	\end{lstlisting}
+	\item We used only three (of many) arguments of this function
+	\item The command provides a very high level of flexibility
+	\item Now read the associated help page
+	\begin{lstlisting}[style = rstyle, breaklines]
+	?read.table
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\cc{read.csv()}, \cc{read.csv2()}, and \cc{read.delim()}}
+\begin{itemize}
+	\item Wrappers (`shortcuts') for using \cc{read.table()}
+	\item \cc{read.csv()} and \cc{read.csv2()}: For cases when data are respectively comma-separated or semi-column-separated
+	\item Note that for example MS Excel saves \texttt{*.csv} files using semi-columns instead of commas
+	\item \cc{read.delim()}: For cases when data are tab-separated (if you use the command \cc{read.table()} with such data, you have to use the \cc{sep = "\textbackslash t"} option)
+	\item (There is also the \cc{read.fwf()} command for cases when  columns in data have fixed width, which we will not discuss as it is rarely used)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Writing to text files}
+\begin{itemize}
+	\item Analogical commands are available for writing:
+	\begin{itemize}
+		\item \cc{write.table()}: for all kinds of text files
+		\item \cc{write.csv()} and \cc{write.csv2()}: for csv files
+	\end{itemize}
+	\item Files are written in the current working directory unless specified otherwise
+	\begin{lstlisting}[style = rstyle, breaklines]
+	write.table(routes.df, "routes.tsv", sep = "\t")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\section{Reading and writing foreign formats}
+\begin{frame}[fragile]
+\frametitle{The \textbf{foreign} package}
+\begin{itemize}
+	\item For reading data files in other applications' formats
+	\item The package is a system one
+	\item We will review only some of the most popular formats, for the remaining see the documentation
+	\item First, load the package so that it can be used:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(foreign)
+	\end{lstlisting}
+	\item Then use the appropriate options to read your file
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{foreign} package: Examples}
+\begin{itemize}
+	\item Read SAS XPORT file on \textcolor{red}{alcohol use} in the U.S. (\url{http://wwwn.cdc.gov/nchs/nhanes/search/DataPage.aspx?Component=Questionnaire&CycleBeginYear=2009}):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	sas1 <- read.xport("ALQ_F.XPT")
+	\end{lstlisting}
+	\item (Also check out \texttt{read.ssd()} for reading native SAS datasets)
+	\item Read Weka ARFF file (\url{http://storm.cis.fordham.edu/~gweiss/data-mining/datasets.html}):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	weka1 <- read.arff("cpu.with.vendor.arff")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{foreign} package: Examples (2)}
+\begin{itemize}
+	\item Read Stata file (Wooldridge, 2012, ch. 18):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	stata1 <- read.dta("phillips.dta")
+	\end{lstlisting}
+	\item Read SPSS file (\url{http://calcnet.mth.cmich.edu/org/spss/Prjs_DataSets.htm}):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	spss1 <- read.spss("MathAssess-SpssFormat.sav", to.data.frame = TRUE)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{foreign} package: Writing to files}
+\begin{itemize}
+	\item Options available for some formats only
+	\item Examples:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	write.arff(routes.df, "routes.arff")
+	write.dta(routes.df, "routes.dta") # will likely produce an error so
+	library(haven)
+	write_dta(routes.df, "routes.dta")
+	write.foreign(sas1, "stata2.csv", "stata2.do", package = "Stata") # SAS and SPSS are also possible
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Reading and writing MS Excel files}
+\begin{itemize}
+	\item Not built-in in base R
+	\item Contributed packages such as \textbf{xlsx} or \textbf{readxl} need to be installed
+	\item Another (newer) one that provides good functionality is also \textbf{openxlsx} (we will use it for exercises)
+	\item Reading (Wooldridge, 2012):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(openxlsx)
+	xlsx1 <- read.xlsx("benefits.xlsx", sheetName = "benefits")
+	\end{lstlisting}
+	\item or:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(readxl)
+	xlsx2 <- read_excel("data/benefits.xlsx", sheet = "benefits", range = "A1:S1849")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Reading and writing MS Excel files (2)}
+	\begin{itemize}
+		\item Writing:
+		\begin{lstlisting}[style = rstyle, breaklines]
+		write.xlsx(sas1, "sas1.xlsx") # With the xlsx package
+		library(writexl)
+		write_xlsx(sas1, "sas2.xlsx") # With the writexl package
+		\end{lstlisting} 
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Reading EViews wf1 files}
+\begin{itemize}
+	\item EViews has been quite popular in FEBA and in public and private institutions in Bulgaria
+	\item To be able to read wf1 files, it is necessary to install the \textbf{hexView} package
+	\item Reading is done with (Wooldridge, 2012):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(hexView)
+	eviews1 <- readEViews("consump.wf1")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\section{R and Databases}
+\begin{frame}[fragile]
+\frametitle{R and databases: General remarks}
+\begin{itemize}
+	\item R can successfully perform some tasks performed by DBMS
+	\item However, it is sometimes useful to use the power of relational databases to complement R's capabilities
+	\item Natural setup: your data already resides in a relational database and you need to access it and analyse it
+	\item Why not do it directly from R?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Some SQL basics}
+\begin{itemize}
+	\item (You have a separate SQL course but we need to get ahead of things now)
+	\item SQL: Structured Query Language
+	\item Not a programming language (like R, Python, C++, etc.)
+	\item Many DBMS implementations, both commercial and free
+	\item We will use SQLite as the alternative (free) that provides the easiest access for our demonstration purposes
+	\item There is a GUI that will be best for our teaching and learning environment: SQLiteStudio
+	\item You can download it from \url{https://github.com/pawelsalawa/sqlitestudio/releases/download/3.2.1/SQLiteStudio-3.2.1.zip} and then just unzip it in a folder of your choice
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Some SQL basics (2)}
+\begin{itemize}
+	\item We will be using the SQLite Sample Database (download from \url{http://www.sqlitetutorial.net/sqlite-sample-database/})
+	\item Unzip \texttt{chinook.db} and load it in SQLiteStudio
+	\item There, you can inspect the contents of tables
+	\item We will execute an SQL query from R to demonstrate how stuff works
+	\item There basically two ways to connect to a database: through the \textbf{DBI} package and through the \textbf{RODBC} package
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Using the \textbf{DBI} package}
+\begin{itemize}
+	\item \textbf{DBI} is decrypted as `database interface'
+	\item This interface provides access to many RDBMSs such as MySQL, PostgreSQL, Oracle, etc.
+	\item What \textbf{DBI} does is to split the client-server interaction into three parts:
+	\begin{itemize}
+		\item Driver
+		\item Connection
+		\item Result
+	\end{itemize}
+	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Using the \textbf{DBI} package (2)}
+\begin{itemize}
+	\item The \underline{driver} serves to make easier the communication between R and a particular RDBMS 
+	\item Therefore, a driver for each of the listed RDBMS is available
+	\item In our case we will be using the SQLite driver which is provided with the \textbf{RSQLite} package
+	\item The \underline{connection} is a wrapper for the actual connection between R and the RDBMS; it is the means through which all queries to and results from the RDMBS are transported
+	\item The \underline{result} describes the result of a query or statement (and contains some methods for formatting, printing, summarizing, etc.)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Back to the example: Connecting to the database}
+\begin{itemize}
+	\item First load the \textbf{RSQLite} package:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(RSQLite)
+	\end{lstlisting}
+	\item Note that this automatically loads \textbf{DBI}, too
+	\item Next, we load the database driver:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	drv <- dbDriver("SQLite")
+	\end{lstlisting}
+	\item Make a character variable to hold the path to the database:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dbpath <- "j:/Pcloud/COURSES_SU/MSc/Probabilisitic and Statistical Computations with R/Topic 03/data/"
+	\end{lstlisting}
+	\item Make the connection:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	mydb <- dbConnect(drv, dbpath)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Exploring the database}
+\begin{itemize}
+	\item We can now list the database tables from within R;
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dbListTables(mydb)
+	\end{lstlisting}
+	\item Take for example the \texttt{artists} table
+	\item We can explore its fields (i.e. names of variables/columns):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dbListFields(mydb, "artists")
+	\end{lstlisting}
+	\item \ldots or read the entire table into an R data frame:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	artists <- dbReadTable(mydb, "artists")
+	\end{lstlisting}
+	\item etc.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Query the database from R}
+\begin{itemize}
+	\item We issue the query and put the result in a data frame in the following way:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	db_data <- dbGetQuery(mydb, "SELECT	trackid, tracks.name AS Track, albums.title AS Album, artists.name AS Artist FROM tracks INNER JOIN albums ON albums.albumid = tracks.albumid INNER JOIN artists ON artists.artistid = albums.artistid WHERE artists.artistid = 22;")
+	\end{lstlisting}
+	\item (Note that the SQL code should not be split across multiple lines as in
+	the slide! Here it’s done only for better visibility)
+	\item You can check what has been extracted by viewing the data frame
+	\item From this point onwards the data is yours to perform statistical analysis on it
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{A MySQL example}
+\begin{itemize}
+	\item We will need for this the \textbf{RMySQL} package so you have to install it
+	\item Load it and load the respective driver:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(RMySQL)
+	drv2 = dbDriver("MySQL")
+	\end{lstlisting}
+	\item Make the connection (this time the data is on a web server):
+	\begin{lstlisting}[style = rstyle, breaklines]
+		mydb2 <- dbConnect(drv2, dbname = "ensembl_compara_51", user="anonymous", password="", host = "ensembldb.ensembl.org")
+	\end{lstlisting}
+	\item List tables and fields:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dbListTables(mydb2)
+	dbListFields(mydb2, "genome_db")
+	\end{lstlisting}
+	\item Read data into a data frame:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	genome <- dbReadTable(mydb2, "genome_db")		
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{ODBC}
+\begin{itemize}
+	\item Decrypted as `Open Database Connectivity'
+	\item Developed originally by Microsoft in the beginning of the 90s
+	\item Currently available on all major OS (Windows, Linux, Mac)
+	\item Aimed to provide an API for accessing DBMS
+	\item Provides independence from DBMS through the usage of an ODBC driver
+	\item Most DBMS producers provide ODBC connectors
+	\item Besides for DBMS, there are ODBC drivers for MS Excel and even for csv files
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Setting up ODBC on Windows}
+\begin{itemize}
+	\item Type `odbc' in the search box, this appears:
+	
+	\includegraphics[scale=0.4]{odbc_win1.png}
+	
+	\item Click on \texttt{Set up ODBC data sources (64-bit)}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Setting up ODBC on Windows (2)}
+\begin{itemize}
+	\item A window appears showing the available connectors
+	
+	\includegraphics[scale=0.4]{odbc_win2.png}
+	
+	\item There are some more if you click \texttt{Add}
+	\item If you miss something, get it online, e.g. \url{http://www.ch-werner.de/sqliteodbc/}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Create a new DSN}
+\begin{itemize}
+	\item DSN is `data source name'
+	\item In the last window that opened, click \texttt{Add}, select \texttt{SQLite3 ODBC driver}
+	\item Name your DSN and point it to your database in what follows:
+	
+	\includegraphics[scale=0.4]{odbc_win3.png}
+	
+	\item Click OK
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{RODBC} package}
+\begin{itemize}
+	\item Allows using this common interface through R
+	\item Should be installed additionally as it is not a system package
+	\item We will try to connect to the \texttt{sampledb} DSN we created
+	\item Load the package and make the connection:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(RODBC)
+	odbc1 <- odbcConnect("sampledb", believeNRows = FALSE, rows_at_time = 1)
+	\end{lstlisting}
+	\item The option \texttt{believeNRows = FALSE} checks whether the number of rows returned by the ODBC connection is believable
+	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{RODBC} package (2)}
+\begin{itemize}
+	\item List tables and import a whole table as a data frame:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	sqlTables(odbc1)
+	odbc_data <- sqlFetch(odbc1, "albums")
+	\end{lstlisting}
+	\item make a query (put data in a data frame again)
+	\begin{lstlisting}[style = rstyle, breaklines]
+	odbc_data2 <- sqlQuery(odbc1, paste("SELECT	trackid, tracks.name AS Track, albums.title AS Album, artists.name AS Artist FROM tracks INNER JOIN albums ON albums.albumid = tracks.albumid INNER JOIN artists ON artists.artistid = albums.artistid WHERE artists.artistid = 22;"))
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{An important note on R and SQL}
+\begin{itemize}
+	\item We discussed only how to retrieve data from DBMS
+	\item But the connections allow much more than this
+	\item Depending on your SQL user rights, it is possible to do with a database what you would normally be able in the very DBMS
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Further readings}
+\begin{itemize}
+	\item Packages' documentation
+	\item Spector's book (somewhat obsolete but still useful)
+	\item Nield, T. (2016): \emph{Getting Started with SQL: A Hands-on Approach for Beginners}, O'Reilly
+\end{itemize}
+\end{frame}
+
+\end{document}
+
+
+
+Spector
+p. 20: MLE
+p. 30: Combinatorics
+
+http://www.burns-stat.com/r-database-interfaces/

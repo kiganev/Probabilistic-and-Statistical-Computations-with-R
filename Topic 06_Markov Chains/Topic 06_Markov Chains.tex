@@ -1,0 +1,367 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+%\usepackage{gensymb}
+%\usepackage{verbatim}
+\usepackage{mathrsfs}  
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{\mathsf{E}}
+\DeclareMathOperator{\var}{\mathsf{Var}}
+\DeclareMathOperator{\cov}{\mathsf{Cov}}
+\DeclareMathOperator{\corr}{\mathsf{Corr}}
+\DeclareMathOperator{\plim}{plim}
+\DeclareMathOperator{\rank}{rank}
+
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+% Change colours of example blocks
+\setbeamercolor{block body example}{bg=blue!5}
+\setbeamercolor{block title example}{fg=white, bg=blue}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+\lstdefinestyle{rstyle}%
+{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\bfseries\color{blue!50!black},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstset{language=R,frame=single}    
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty
+
+\title{R403: Probabilistic and Statistical Computations\\ with R}
+\subtitle{Topic 6: \textcolor{myred}{Discrete and Continuous Markov Chains}}
+\author{Kaloyan Ganev}
+
+\date{2022/2023} 
+
+\begin{document}
+\maketitle
+
+\begin{frame}[fragile]
+\frametitle{Lecture Contents}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}[fragile]
+	\frametitle{Introduction}
+	\begin{itemize}
+		\item Just a brief introduction to the topic(s) will be given
+		
+		\item Reason: insufficient time, no further usage in subsequent courses
+		
+		\item The latter does not mean irrelevance or inapplicability
+		
+		\item For intermediate and advanced treatments, references will be provided
+	\end{itemize}
+\end{frame}
+
+\section{Stochastic Processes}
+\begin{frame}[fragile]
+	\frametitle{Stochastic Processes}
+	\begin{definition}
+		A stochastic process is a collection of random variables $ \{X(t), \ t \in T\} $ where $ t $ is a (time) index. $ X(t) $ is called the \textit{state} of the process at time $ t $, and $ T $ is the \textit{index set} of the process.
+	\end{definition}
+
+	\begin{definition}
+		If $ T $ is countable, the stochastic process is called a \textit{discrete-time process}. If $ T $ is not countable, the process is a \textit{continuous-time} one.
+	\end{definition}
+
+	\begin{itemize}
+		\item Notation:
+		\[
+		\begin{array}{lcl}
+			X(t) & - & \textrm{continuous-time}\\
+			X_{t} & - & \textrm{discrete-time}			
+		\end{array}
+		\]
+	\end{itemize}
+
+	\begin{definition}
+		The \textit{state space} of a stochastic process is the set of all possible values of $ X(t) $.
+	\end{definition}
+\end{frame}
+
+\section{Discrete-time Markov Chains}
+\begin{frame}[fragile]
+	\frametitle{Discrete-time Markov Chains}
+	\begin{itemize}
+		\item Let $ X_{t} $ be a discrete-time stochastic process that generates a value for each time $ t \in T $
+		
+		\item Assume that the random variables that constitute it $ X_{0}, X_{1}, \ldots$ are \textit{not} independent 
+		
+		\item Instead, values at time $ t $ are determined by values in previous periods
+		
+		\begin{definition}[Markov Property]
+			A stochastic process has the Markov property\footnote{Also known as the \textit{memoryless property.}} if the conditional distribution of future states depends only on the present state, and not on the events that precede it.
+		\end{definition}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Discrete-time Markov Chains (2)}
+	\begin{itemize}
+		\item Let the set of of possible values of the stochastic process $ \{X_{t}, t = 0, 1, 2, \ldots \}$ be a finite or a countable number
+		
+		\item Usually that set of possible values is taken to be the set of non-negative integers, i.e. $ \mathcal{S} = \{0, 1, 2, \ldots\} $
+		
+		\item The process is said to be in state $ i $ at time $ t $ if $ X_{t} = i $
+		
+		\begin{definition}
+			A \textit{Markov chain} is a stochastic process for which the conditional distribution of any future state $ X_{t+1} $ depends only on the present state $ X_{t} $, and not on the past states $ X_{0}, X_{1}, \ldots, X_{t-1} $, i.e.
+			\[
+				\begin{array}{lcl}
+					P(X_{t+1} = j|X_{t} = i, X_{t-1} = i_{t-1}, \ldots, X_{1} = i_{1}, X_{0} = i_{0}) = \\
+					\quad\\
+					= P(X_{t+1} = j|X_{t} = i) = P_{ij}
+				\end{array}
+			\]
+		\end{definition}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Discrete-time Markov Chains (3)}
+	\begin{itemize}
+		\item $ P_{ij} $ is fixed and is interpreted as the probability of transitioning from state $ i $ at time $ t $ to state $ j $ at time $ t+1 $
+		
+		\item Note that it is possible that $ i = j $, i.e. the process can remain in the same state in the next period
+		
+		\item $ P_{ij} $ has the following properties:
+		\begin{itemize}
+			\item $ P_{ij} \geq 0, \quad i,j \geq 0 $
+			
+			\item $ \displaystyle\sum_{j = 0}^{\infty} P_{ij} = 1,\quad i = 0, 1, 2, \ldots $
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Discrete-time Markov Chains (4)}
+	\begin{itemize}
+		\item All such probabilities of transition can be arranged in a matrix called the \textit{transition matrix}
+		\[
+			\mathbf{P} = 
+			\begin{pmatrix}
+				P_{00} & P_{01} & P_{02} & \ldots\\
+				P_{10} & P_{11} & P_{12} & \ldots\\
+				\vdots & \vdots & \vdots\\
+				P_{i0} & P_{i1} & P_{i2} & \ldots\\
+				\vdots & \vdots & \vdots\\
+			\end{pmatrix}
+		\]
+		
+		\item Take a numerical example borrowed from Chiang and Wainwright (2005), Exercise 4.7. (in the next slide)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Discrete-time Markov Chains (5)}
+	\begin{exampleblock}{Chiang and Wainwright (2005), Exercise 4.7.}
+		Consider a situation of mass layoff (i.e. a factory shuts down) where 1200 people become unemployed and now begin a job search. In this case there are two states: employed ($ E $) and unemployed ($ U $) with an initial vector
+		\[
+		x_{0}' = 
+		\begin{pmatrix}
+			$ E $ & $ U $
+		\end{pmatrix} =
+		\begin{pmatrix}
+			0 & 1200
+		\end{pmatrix}
+		\]
+		
+		Suppose that in any given period an unemployed person will find a job with probability 0.7 and will therefore remain unemployed with a probability of 0.3. Additionally, persons who find themselves employed in any given period may lose their job with a probability of 0.1 (and will have a 0.9 probability of remaining employed).
+	\end{exampleblock}
+	\begin{itemize}
+		\item The Markov transition matrix for this problem is (solving part (a) of the example)
+		\[
+		\mathbf{P} = 
+		\begin{pmatrix}
+			0.9 & 0.1\\
+			0.7 & 0.3
+		\end{pmatrix}
+		\]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Chapman–Kolmogorov Equations}
+	\begin{itemize}
+		\item The probabilities $ P_{ij} $ defined so far are probabilities of \textit{one-step} transitions
+		
+		\item How about probabilities of \textit{multi-step} ones?
+		
+		\item The $ k $-step transition probabilities $ P_{ij}^{k} $ are the probabilities that in $ k $ periods a process will be in state $ j $ is presently it is in state $ i $
+		\[
+			P_{ij}^{k} = P(X_{t+k} = j | X_{t} = i), \quad k \geq 0, \ j \geq 0 \quad (*)
+		\]
+		
+		\item To compute those $ k $-step transition probabilities, the Chapman–Kolmogorov equations are used:
+		\[
+			P_{ij}^{k + r} = \sum_{m = 0}^{\infty} P_{im}^{k}P_{mj}^{r}, \quad \forall k, r \geq 0, \ \forall i,j
+		\]
+		
+		\item Here, $ m $ denotes the intermediate states that the process will go into after it starts in state $ i $ and before it ends up in state $ j $
+		
+		\item To arrive at the latter, in other words it takes $ k + r $ transitions
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Chapman–Kolmogorov Equations (2)}
+	\begin{itemize}
+		\item In more detail, the latter can be more thoroughly written as
+		\[
+			\begin{array}{lcl}
+				P_{ij}^{k + r} & = & P(X_{k + r} = j | X_{0} = i) = \\
+				\quad\\
+				& = & \displaystyle\sum_{m = 0}^{\infty} P(X_{k + r} = j, X_{k} = m | X_{0} = i) = \\
+				\quad\\
+				& = & \displaystyle\sum_{m = 0}^{\infty} P(X_{k + r} = j | X_{k} = m, X_{0} = i)P(X_{k} = m | X_{0} = i) = \\ 
+				\quad\\
+				& = & \displaystyle\sum_{m = 0}^{\infty} P_{im}^{k}P_{mj}^{r}
+			\end{array}
+		\]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Chapman–Kolmogorov Equations (3)}
+	\begin{itemize}
+		\item Denote by $ \mathbf{P}^{(k)} $ the matrix of $ k $-step transition probabilities $ P_{ij}^{k} $
+		
+		\item Then, using $ (*) $,
+		\[
+			\mathbf{P}^{(k + r)} = \mathbf{P}^{(k)}\mathbf{P}^{(r)}
+		\]
+		
+		\item It is easy to show that $ \mathbf{P}^{(k)} = \mathbf{P}^{k} $
+		
+		\item Return now to the \textcolor{blue}{example}
+		
+		\item Part (b) requires to find what will be the number of unemployed people after (i) two periods; (ii) 3 periods; (iii) 5 periods; (iv) 10 periods
+		
+		\item To do that, simply use the powers of $ \mathbf{P} $
+		
+		\item You will find out that the levels of employment and unemployment reach a steady-state (this is part (c) of the example)
+	\end{itemize}
+\end{frame}
+
+\section{Continuous-time Markov Chains}
+\begin{frame}[fragile]
+	\frametitle{Continuous-time Markov Chains}
+	\begin{itemize}
+		\item Let $ \{X(t), \ t \geq 0\} $ be a continuous-time process taking on non-negative integers as values
+		
+		\item Such a process is a \textit{continuous-time Markov chain} if $ \forall s,t \geq 0 $ and $ \forall i, j, x(u) \geq 0, \ u \in [0,s) $,
+		\[
+			\begin{array}{lcl}
+				P(X(t+s) = j | X(s) = i, X(u) = x(u),  \ u \in [0,s) ) = \\
+				\quad\\
+				=  P(X(t+s) = j | X(s) = i)
+			\end{array}
+		\]
+		
+		\item Here, $ X(s) $ is the present state, while $ X(u) $ relates to the past
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Continuous-time Markov Chains (2)}
+	\begin{itemize}
+		\item If the probability
+		\[
+			P(X(t+s) = j | X(s) = i)
+		\]
+		
+		is independent of $ s $, then the Markov chain is said to have \textit{stationary/homogeneous} transition probabilities
+		
+		\item Applications of continuous-time Markov chains: birth and death processes, population processes, migration processes, etc.
+		
+		\item The \textbf{markovchain} package: handles discrete-time \textit{and} continuous-time Markov chains (the vignette contains lots of examples)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{References}
+	\begin{itemize}
+		\item Privault, N. (2018): \textit{Understanding Markov Chains}, Springer, 2nd ed.
+		
+		\item Ross, S. (2019): \textit{Introduction to Probability Models}, Academic Press, 12th ed.
+		
+		\item \url{https://en.wikipedia.org/wiki/Markov_property}
+	\end{itemize}
+\end{frame}
+\end{document}

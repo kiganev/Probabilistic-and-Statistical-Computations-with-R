@@ -1,0 +1,896 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+%\usepackage{gensymb}
+%\usepackage{verbatim}
+\usepackage{mathrsfs}  
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{\mathsf{E}}
+\DeclareMathOperator{\var}{\mathsf{Var}}
+\DeclareMathOperator{\cov}{\mathsf{Cov}}
+\DeclareMathOperator{\corr}{\mathsf{Corr}}
+\DeclareMathOperator{\plim}{plim}
+\DeclareMathOperator{\rank}{rank}
+
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+\lstdefinestyle{rstyle}%
+{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\bfseries\color{blue!50!black},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstset{language=R,frame=single}    
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty
+
+\title{R403: Probabilistic and Statistical Computations\\ with R}
+\subtitle{Topic 1: \textcolor{myred}{Introduction to R. Common Data Types and Structures}}
+\author{Kaloyan Ganev}
+\date{2022/2023}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}
+\tableofcontents[hideallsubsections]
+\end{frame}
+
+\hypertarget{introductory-notes}{%
+\section{Introductory Notes}\label{introductory-notes}}
+
+\begin{frame}[fragile]
+\frametitle{History of R}
+\begin{itemize}
+	\item R is a dialect of the S language
+	
+	\item S was developed in the 1970s in the Bell Labs
+
+	\item Initially written in Fortran, rewritten in C in the late 1980s
+
+	\item Currently available through a commercial product called S-PLUS
+
+	\item R was developed in 1991 by Ross Ihaka and Robert Gentleman (University of Auckland, New Zealand)
+	
+	\item First public announcement: 1993
+	
+	\item GNU GPL: 1995
+	
+	\item Version 1.0.0: 2000
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{How to Get the Software}
+\begin{itemize}
+	\item Available for free from \url{https://www.r-project.org/}
+	
+	\item All major OS's supported
+	
+	\item Lots of contributed packages available from CRAN mirrors
+
+	\item Non-CRAN packages will most probably not be used throughout the course
+	
+	\item Check out documentation links on the R Project site for what R and additional packages do
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\frametitle{GUIs}
+\begin{itemize}
+	\item Although R is command-line driven, there are some GUIs that provide more convenience in working with it
+	
+	\item Some examples:
+	\begin{itemize}
+		\item R Commander (\url{http://socserv.mcmaster.ca/jfox/Misc/Rcmdr/})
+
+		\item Deducer (\url{http://www.deducer.org/pmwiki/index.php?n=Main.DeducerManual?from=Main.HomePage})
+
+		\item JGR (\url{http://www.rforge.net/JGR/})
+		
+		\item RKWard (\url{https://rkward.kde.org/})
+		
+		\item \textcolor{red}{RStudio} (\url{https://www.rstudio.com/})
+		
+		\item Jamovi (\url{https://www.jamovi.org})
+		
+		\item BlueSky Statistics (\url{https://www.blueskystatistics.com/})
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Advantages of R}
+\begin{itemize}
+	\item Free and open-source
+
+	\item Flexible: you can do whatever you want, no pre-programmed black boxes
+	
+	\item Pre-built packages so that you don't have to reinvent the wheel
+	
+	\item Enormous graphing capabilities, publication-quality graphical output
+	
+	\item Active world-wide community (check out for example \href{https://stackoverflow.com/}{Stack Overflow}, \href{https://stackexchange.com/}{Stack Exchange}, etc.)
+	
+	\item Huge amounts of online resources (manuals, videos, hints, etc.), many of them freely available
+
+	\item etc.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{RStudio: a Quick Overview}
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.23]{rstudio.png}
+\end{figure}
+\end{frame}
+
+\section{Basic Capabilities of R}
+
+\begin{frame}[fragile]{Before We Begin\ldots}
+\begin{itemize}
+	\item Set your working directory: this is where R reads and writes files (if you don't instruct it otherwise explicitly)
+	
+	\item By default, the working directory is your home directory; type to see:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	getwd()
+	\end{lstlisting}
+
+	\item To permanently change the working directory, in RStudio go to \texttt{Tools -> Global Options\ldots} and there click Browse next to \texttt{Default working directory}
+	
+	\item If you would like to change it on a case-by-case basis, use:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	setwd(<path to directory>)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The RStudio Console}
+\begin{itemize}
+	\item This is where commands are typed and issued to R
+
+	\item Commands are written and executed one at a time
+	
+	\item A simple command:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dir()
+	\end{lstlisting}
+	
+	to list the contents of your current working directory
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The RStudio Console (2)}
+\begin{itemize}
+	\item R as a calculator:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	5 + 6
+	3 * 4
+	12 / 7
+	2 ^ 5
+	11 %% 5
+	1 / Inf
+	0 / 0
+	\end{lstlisting}
+
+	\item Doing this, however, you immediately lose the result (cannot use it later)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Objects and Object Types}
+\begin{itemize}
+	\item R objects: containers (memory locations, to be fully correct) to keep information for later usage
+	
+	\item Basic types of objects:
+	\begin{itemize}
+		\item Vectors
+		
+		\item Matrices
+
+		\item Lists
+
+		\item Arrays
+		
+		\item Factors
+		
+		\item Data frames
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Assigning Values to Objects}
+\begin{itemize}
+	\item Assignment: putting something in the container; examples:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	x1 <- 10 # numeric
+	x2 <-5L # integer
+	x3 <- 6 + 2i # complex
+	y <- FALSE # logical
+	z <- "Hello World!" # character
+	\end{lstlisting}
+
+	\item Print objects: type name or type
+	\begin{lstlisting}[style = rstyle, breaklines]
+	print(<object name>)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Object Attributes}
+\begin{itemize}
+	\item Use
+	\begin{lstlisting}[style = rstyle, breaklines]
+	attributes(<object name>)
+	\end{lstlisting}
+	to explore; for example:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	z1 <- rnorm(625)
+	z2 <- matrix(z1, nrow = 25)
+	attributes(z2)
+	\end{lstlisting}
+
+	\item Attributes can include names, length, dimensions, dimnames, class, etc.
+\end{itemize}
+
+\end{frame}
+
+\section{Basic Data Types}
+\begin{frame}
+\frametitle{Basic Data Types}
+\begin{itemize}
+	\item You saw them already on the previous slides:
+	\begin{itemize}
+		\item Numeric
+
+		\item Integer
+
+		\item Complex
+
+		\item Logical
+		
+		\item Character
+	\end{itemize}
+
+	\item Those are also called \textit{atomic data types}
+	
+	\item Such ``atoms'' are used to construct various objects and data structures in R
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Basic Data Types (2)}
+\begin{itemize}
+	\item To get the type of an object:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	mode(<name of object>) # low level
+	class(<name of object>) # high level
+	\end{lstlisting}
+
+	\item To check whether an object is of a specific type, e.g.:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	is.numeric(x) # returns TRUE or FALSE
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Type Coercion}
+\begin{itemize}
+	\item Means forceful transforming one data type into another
+	
+	\item Check out:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	as.numeric(FALSE) # Try also with TRUE
+	as.character(102)
+	as.integer(105.88)
+	as.complex(3.14)
+	as.numeric("458")
+	as.numeric("This is text.")
+	\end{lstlisting}
+
+	\item Same logic followed for all other objects, too
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}[fragile]{The Workspace}
+\begin{itemize}
+	\item Once created, an object is placed in the workspace
+	
+	\item It stays there until removed, e.g.~with the \texttt{rm()} command
+	
+	\item Can be seen in the top-right tab labelled ``Environment''
+	
+	\item Can also be listed by using the command line:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	ls()
+	\end{lstlisting}
+	
+	\item You can set various options for working with R, e.g.~the number of digits to display after the decimal sign:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	options(digits = 2)
+	\end{lstlisting}
+	
+	\item Check out also:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	help(options)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]{R Scripts}
+\begin{itemize}
+	\item In essence, text files to hold R commands
+
+	\item Saved with the .R extension
+	
+	\item Provide convenience and reproducibility
+	
+	\item In RStudio, they can be executed line by line, in blocks, or entirely
+
+	\item To include an existing script into a new script:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	source(<script name>)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\section{Vectors, matrices and arrays}
+\subsection{Vectors}
+
+\begin{frame}[fragile]
+\frametitle{Vectors in R}
+\begin{itemize}
+	\item Unlike in mathematics where vectors are strictly comprised of numbers, in R vectors are ordered collections of data elements
+	
+	\item In other words, you can have a numeric vector, an integer vector, a character vector, etc.
+	
+	\item Created with the \texttt{c()} command:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	x1 <- c(1, 2, 3, 4)
+	x2 <- seq(1, 10)
+	x3 <- seq(from = 2, to = 3, by = 0.01)
+	y <- c("One", "Two", "3")
+	z <- c(TRUE, FALSE, T, F)		
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Vectors in R (2)}
+\begin{itemize}
+	\item Note that R treats single elements also as vectors!
+	\begin{lstlisting}[style = rstyle, breaklines]
+	is.vector(x3)
+	is.vector(3)
+	is.vector("text")
+	\end{lstlisting}
+	
+	\item What is specific is that a vector can contain only one basic type of data
+	
+	\item For example, a vector can hold only complex numbers; every other number is converted (coerced) to complex
+	\begin{lstlisting}[style = rstyle, breaklines]
+	y <- c(1.02, 3 + 0.5i) # Check out the next line, too}
+	y <- c(1.02, 3 +0.5i, "text")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Vectors in R (3)}
+\begin{itemize}
+	\item Vectors in real-life applications contain information on something
+	
+	\item In order to not forget what info is contained in each element, elements can be named in R
+	\begin{lstlisting}[style = rstyle, breaklines]
+	lunch_costs <- c(3.30, 5.91, 2.75)
+	names(lunch_costs) <- c("Soup", "Main course", "Dessert")
+	print(lunch_costs)
+	str(lunch_costs)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Creating Empty Vectors}
+\begin{itemize}
+	\item One way to create is with the \texttt{vector()} function
+	
+	\item You need to specify type (numeric, logical, character, integer, double):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	em1 <- vector("numeric")
+	em2 <- vector("character")
+	em3 <- vector("logical")
+	\end{lstlisting}
+
+	\item Note that some default values are imputed if you additionally specify length as an argument
+	\begin{lstlisting}[style = rstyle, breaklines]
+	nem1 <- vector("numeric", length = 20)
+	\end{lstlisting}
+
+	\item You can get empty vectors also through:
+	\begin{lstlisting}[style = rstyle, breaklines]
+		em1a <- numeric()
+		em2a <- character()
+		em3a <- logical()
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]{Mathematical Operations with Vectors}
+\begin{itemize}
+	\item All operations are carried out element-wise; check out:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	v1 <- c(1, 2, 3)
+	v2 <- c(4, 5, 6)
+	v1 + 3.5
+	v1 * 2
+	v1 / 3
+	v1 - v2
+	v1 * v2
+	v1 ^ v2
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Mathematical Operations with Vectors (2)}
+\begin{itemize}
+	\item What if vectors are of different sizes? Recycling
+	\begin{lstlisting}[style = rstyle, breaklines]
+	v3 <- c(7, 8, 9, 10)
+	v4 <- v1 + v3
+	v5 <- v1 * v3
+	\end{lstlisting}
+
+	\item Safest strategy: avoid recycling if possible
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Element Sums and Vector Comparison}
+\begin{itemize}
+	\item If you need to find the sum of all elements in a vector:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	total_lunch <- sum(lunch_costs)
+	total_lunch	
+	\end{lstlisting}
+
+	\item Compare with another vector:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	lunch_costs_alt <- c(3.10, 6.25, 2.90)
+	lunch_costs > lunch_costs_alt
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\subsection{Factors}
+\begin{frame}[fragile]
+	\frametitle{Factors}
+	\begin{itemize}
+		\item Statistical models work with two types of variables: quantitative and qualitative
+		
+		\item Quantitative variables are expressed in numbers in a straightforward manner
+		
+		\item In general such variables are continuous range and can therefore have infinitely many values\footnote{Sometimes, their value range can be though restricted.}
+		
+		\item Qualitative variables, at the same time, usually can take on only a limited number of values
+		
+		\item Those values are usually non-numerical, and are known as \textit{categories}\footnote{Therefore quality variables are often mentioned as \textit{categorical variables}.}
+		
+		\item Since computers understand only numbers, categorical values need to be converted to numbers (usually non-negative digits)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Factors (2)}
+	\begin{itemize}
+		\item In R, categorical variables are implemented through the usage of \textit{factors}
+		
+		\item Each possible value (category) of a factor is known as a \textit{level}
+		
+		\item Levels are stored as integers
+		
+		\item Factors can be \textit{unordered} or \textit{ordered}
+		
+		\item Ordering could be imposed by the nature of the data (e.g. weekdays, months, temperature, etc.)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Factors (3)}
+	\begin{itemize}
+		\item In the following example, a qualitative variable describing the hair colour of a sample of people is created:
+		\begin{lstlisting}[style = rstyle, breaklines]
+		hair_col <- c("black", "brown", "black", "blond", "red", "brown", "black")
+		hair_col_f <- factor(hair_col)
+		hair_col_f
+		\end{lstlisting}
+	
+		\item This is an unordered factor: it does not matter which colour is put first, second, etc.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Factors (4)}
+	\begin{itemize}
+		\item To see how an ordered one can be created, see the next example:
+		\begin{lstlisting}[style = rstyle, breaklines]
+		temp <- c("freezing", "warm", "hot", "cold", "warm", "freezing")
+		temp_f <- factor(temp, ordered = TRUE, levels = c("freezing", "cold", "warm", "hot"))
+		temp_f
+		\end{lstlisting}
+	
+		\item The way categories are displayed can be changed, too, by changing the labels of categories:
+		\begin{lstlisting}[style = rstyle, breaklines]
+		temp_f[2] < temp_f[4] # Comparison possible
+		temp_f <- factor(temp, ordered = TRUE, levels = c("freezing", "cold", "warm", "hot"),
+		labels = c("very cold", "cold", "warm", "hot")) # labels changed here
+		temp_f 
+		\end{lstlisting}
+	\end{itemize}
+\end{frame}
+
+\subsection{Matrices}
+\begin{frame}[fragile]
+\frametitle{Matrices in R}
+\begin{itemize}
+	\item Matrices are an extension of vectors to two dimensions
+
+	\item All other properties are maintained, incl. single basic data type and automatic coercion
+	
+	\item One way to create:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	m1 <- matrix(1:12, nrow = 3) # or,
+	m1 <- matrix(1:12, ncol = 4)
+	\end{lstlisting}
+
+	\item Note that elements are filled column by column by default; if you want it by rows:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	m2 <- matrix(1:12, ncol = 4, byrow = TRUE)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}[fragile]{Matrices in R (2)}
+\begin{itemize}
+	\item Another way to create:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	m3 <- cbind(lunch_costs, lunch_costs_alt)	
+	\end{lstlisting}
+	
+	\item Change column names:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	colnames(m3) <- c("Costs, option 1", "Costs, option 2")
+	\end{lstlisting}
+
+	\item Add a row of totals:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	m3a <- rbind(m3, colSums(m3))
+	rownames(m3a)[4] <- "Total"
+	\end{lstlisting}
+
+	\item  \texttt{rowSums()} is analogical to \texttt{colSums()} and also self-explanatory
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Subsets (Slices) of Matrices}
+\begin{itemize}
+	\item Analogical to vectors, only one more dimension is added:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	m3a[,1]
+	m3a[2,]
+	m3a[c(1, 3), 1]
+	m3a[4, 2]
+	m3a["Soup", "Costs, option 2"]
+	m3a[c(T, F, F, F), c(T,F)]
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Mathematical Operations with Matrices}
+\begin{itemize}
+	\item Again, analogical to operations with vectors
+
+	\item Check out:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	m1 + 5
+	m1 * 3
+	m1 %% 3
+	m1 ^ 2	
+	\end{lstlisting}
+	
+	\item Two or more matrices: element-wise!
+	\begin{lstlisting}[style = rstyle, breaklines]
+	m1 + m2
+	m1 / m2
+	m1 %% m2
+	m1 ^ m2 
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{`Traditional' Matrix Algebra in R}
+\begin{itemize}
+	\item Transposition:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	t(m1)
+	\end{lstlisting}
+
+	\item Multiplication (possible if matrices are conformable):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	t(m1) %*% m2 # equivalent to
+	crossprod(m1,m2)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{`Traditional' Matrix Algebra in R (2)}
+\begin{itemize}
+	\item Inverse matrix (if matrix square and non-singular):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	m4 <- matrix(1:4, nrow = 2)
+	solve(m4)
+	\end{lstlisting}
+
+	\item Eigenvalues and eigenvectors:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	eig <- eigen(m4)
+	eig$val
+	eig$vec
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\subsection{Arrays}
+
+\begin{frame}[fragile]
+\frametitle{Arrays in R}
+\begin{itemize}
+	\item Vectors are one-dimensional arrays
+	
+	\item Matrices are two dimensional arrays
+	
+	\item Higher dimensions are also possible
+	\item A 3D array:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	array1 <- array(1:343, dim = c(7, 7, 7))
+	\end{lstlisting}
+	
+	\item You can name dimensions using \texttt{dimnames()}
+\end{itemize}
+\end{frame}
+
+
+\section{Lists and Data Frames}
+
+\begin{frame}[fragile]
+\frametitle{Lists in R}
+
+\begin{itemize}
+	\item Vectors, matrices and arrays can hold information that is only of one type
+
+	\item When it is necessary to have more than one data type, lists are used
+
+	\item Created with the \texttt{list()} command
+	
+	\item Example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	list1 <- list(TRUE, "France", 21)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Lists in R (2)}
+\begin{itemize}
+	\item Can be named
+	\begin{lstlisting}[style = rstyle, breaklines]
+	names(list1) <- c("Active", "Country", "Age")
+	\end{lstlisting}
+
+	\item Can also hold other complex structures such as vectors, matrices, etc., even other lists
+	\begin{lstlisting}[style = rstyle, breaklines]
+	list2 <- list(Appearances = c(T,F,T,T,T), Attributes = list1)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Subsetting Lists}
+\begin{itemize}
+	\item Single square brackets return a list
+	\begin{lstlisting}[style = rstyle, breaklines]
+	list3 <- list2[1]
+	\end{lstlisting}
+	
+	\item Double square brackets extract the generic element; in the current  example: a vector:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	vec1 <- list2[[1]]
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Subsetting Lists (2)}
+\begin{itemize}
+	\item The same is achieved with the \$ sign:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	vec2 <- list2$Appearances
+	\end{lstlisting}
+
+	\item The resulting vectors (or other types) can be further indexed to get their elements
+	\begin{lstlisting}[style = rstyle, breaklines]
+	list2[[1]][1]
+	list2$Appearances[1]
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Subsetting lists (3)}
+\begin{itemize}
+	\item Subsetting is also possible by name:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	list2["Attributes"]
+	\end{lstlisting}
+
+	\item Also, by logical values:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	list1[c(FALSE, TRUE, FALSE)]
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Extending Lists}
+\begin{itemize}
+	\item Easiest done by means of the \$ sign
+	\begin{lstlisting}[style = rstyle, breaklines]
+	teams <- c("Real Madrid", "Barcelona", "Valencia")
+	list2$clubs <- teams
+	\end{lstlisting}
+
+	\item Using single and double square brackets also possible although somewhat more difficult
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Data Frames}
+\begin{itemize}
+	\item A special type of list
+	
+	\item Contains vectors of the same length (same type not required)
+	
+	\item Correspond to the notion of datasets in other statistical packages
+	
+	\item Variables correspond to columns, while observations correspond to rows
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Data Frames (2)}
+\begin{itemize}
+	\item Created from other objects, e.g.~matrices:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	m4df <- matrix(1:9, nrow = 3)
+	df1 <- as.data.frame(m4df)
+	\end{lstlisting}
+
+	\item Name variables:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	names(df1) <- c("One", "Two", "Three")
+	\end{lstlisting}
+
+	\item Subsetting uses both vector and list approaches
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Extending Data Frames}
+\begin{itemize}
+	\item Columns (new variables) and rows (new observations) can be added
+	
+	\item For example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	df1$Four <- c(10, 11, 12)
+	totals <- data.frame(matrix(c(6, 15, 24, 33), 
+		nrow = 1, ncol = 4))
+	names(totals) <- c("One", "Two", "Three", "Four")
+	df2 <- rbind(df1, totals)
+	\end{lstlisting}
+	
+	\item Data frames can also be directly read from external sources (text, csv, databases, etc.)
+	
+	\item This is also the most common data structure used in statistical applications
+\end{itemize}
+\end{frame}
+
+\end{document}

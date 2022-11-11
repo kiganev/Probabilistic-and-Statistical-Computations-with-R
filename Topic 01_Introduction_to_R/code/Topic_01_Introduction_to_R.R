@@ -1,6 +1,12 @@
 # Clear workspace
 rm(list = ls())
 
+# Clear plots
+check_dev <- dev.list()
+if(!is.null(check_dev)){
+  dev.off(dev.list()["RStudioGD"])  
+}
+
 # Get working directory
 getwd()
 
@@ -55,7 +61,7 @@ options(digits = 4)
 
 # Vectors
 x1 <- c(1, 2, 3, 4)
-x2 <- seq(from = 1, to=10, by=1)
+x2 <- seq(from = 1, to=100, by=1)
 x3 <- seq(from = 2, to = 3, by = 0.01)
 y <- c("One", "Two", 3)
 z <- c(TRUE, FALSE, T, F)
@@ -76,6 +82,7 @@ lunch_costs <- c(3.30, 5.91, 2.75)
 names(lunch_costs) <- c("Soup", "Main course", "Dessert")
 print(lunch_costs)
 str(lunch_costs)
+attributes(lunch_costs)
 
 # Empty vectors
 em1 <- vector("numeric")
@@ -83,6 +90,7 @@ em2 <- vector("character")
 em3 <- vector("logical")
 
 nem1 <- vector("numeric", length = 20)
+nem1
 
 em1a <- numeric()
 em2a <- character()
@@ -120,23 +128,26 @@ lunch_costs[c("Soup","Dessert")]
 lunch_costs[c(TRUE, FALSE, TRUE)]
 lunch_costs[1:2]
 
-emat1 <- matrix(numeric())
-emat1
-
 # Factors
 hair_col <- c("black", "brown", "black", "blond", "red", "brown", "black")
 hair_col_f <- factor(hair_col)
 hair_col_f
 
 temp <- c("freezing", "warm", "hot", "cold", "warm", "freezing")
-temp_f <- factor(temp, ordered = TRUE, levels = c("freezing", "cold", "warm", "hot"))
+temp_f <- factor(temp,
+                 ordered = TRUE, 
+                 levels = c("freezing", "cold", "warm", "hot"))
 temp_f
-temp_f[2] < temp_f[4]
-temp_f <- factor(temp, ordered = TRUE, levels = c("freezing", "cold", "warm", "hot"),
-                 labels = c("very cold", "cold", "warm", "hot"))
+temp_f[2] < temp_f[4] # Comparison possible
+temp_f <- factor(temp, ordered = TRUE, 
+                 levels = c("freezing", "cold", "warm", "hot"),
+                 labels = c("very cold", "cold", "warm", "hot")) # labels changed here
 temp_f
 
 # Create matrix
+emat1 <- matrix(numeric()) # Empty matrix
+emat1
+
 m1 <- matrix(1:12, nrow = 3) # or,
 m1 <- matrix(1:12, ncol = 4) 
 m1
@@ -176,6 +187,9 @@ m1 + m2
 m1 / m2
 m1 %% m2
 m1^m2
+
+m1
+m2
 
 # True matrix algebra
 t(m1)
