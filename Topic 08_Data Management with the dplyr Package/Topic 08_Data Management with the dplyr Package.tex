@@ -1,0 +1,319 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+%\usepackage{gensymb}
+%\usepackage{verbatim}
+\usepackage{mathrsfs}  
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{\mathsf{E}}
+\DeclareMathOperator{\var}{\mathsf{Var}}
+\DeclareMathOperator{\cov}{\mathsf{Cov}}
+\DeclareMathOperator{\corr}{\mathsf{Corr}}
+\DeclareMathOperator{\plim}{plim}
+\DeclareMathOperator{\rank}{rank}
+
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+\lstdefinestyle{rstyle}%
+{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\color{blue},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstset{language=R,frame=single}    
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty
+
+
+\title{R403: Probabilistic and Statistical Computations\\ with R}
+\subtitle{Topic 08: \textcolor{myred}{Data Management with the \textbf{dplyr} Package}}
+\author{Kaloyan Ganev}
+
+\date{2022/2023} 
+
+\begin{document}
+\maketitle
+
+\begin{frame}[fragile]
+\frametitle{Lecture Contents}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}[fragile]
+\frametitle{Introduction}
+\begin{itemize}
+	\item Working with data frames in the `traditional' way can be cumbersome
+	\item Luckily, additional packages that save a lot of time and trouble exist
+	\item Two notable alternatives: the \textbf{dplyr} package, and the \textbf{data.table} package
+	\item We will not discuss the latter (it is left to your curiosity)
+	\item Our focus will be on the former
+	\item Before that, we will discuss the `ecosystem' that it belongs to: the \textbf{tidyverse}
+	\item \textcolor{red}{Note:} A whole book available here in HTML format: \url{http://r4ds.had.co.nz/}
+\end{itemize}
+\end{frame}
+
+\section{The tidyverse}
+\begin{frame}[fragile]
+\frametitle{The \textbf{tidyverse}}
+\begin{itemize}
+	\item A group of packages that ``share an underlying design philosophy, grammar, and data structures'' (\url{https://www.tidyverse.org/})
+	\item This is what in fact makes the ``ecosystem''
+	\item Main purpose: data science, but naturally appropriate for other purposes, too
+	\item Take a look at the package list; we will pay some attention to a couple of them initially, then we will switch to \textbf{dplyr}
+	\item Over the course of the module, we will have thorough sessions on some other among them (\textbf{ggplot2} in particular)
+	\item To install \textbf{tidyverse}:
+	\begin{lstlisting}[style = rstyle]
+	install.packages("tidyverse")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{readr} Package}
+\begin{itemize}
+	\item Load \textbf{tidyverse}:
+	\begin{lstlisting}[style = rstyle]
+	library(tidyverse)
+	\end{lstlisting}
+	\item \textbf{readr} has similar wrappers to the ones present in base R (recall the \cc{read.table()} function):
+	\begin{itemize}
+		\item \cc{read\_csv()}
+		\item \cc{read\_csv2()}
+		\item \cc{read\_tsv()}
+		\item \cc{read\_delim()}
+		\item \cc{read\_fwf()}
+		\item \cc{read\_table()}: for reading fixed-width files, columns separated by white space
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{readr} Package (2)}
+\begin{itemize}
+	\item An example:\footnote{Taken from \url{https://catalog.data.gov/dataset?res_format=CSV}}
+	\begin{lstlisting}[style = rstyle, breaklines]
+	data1 <- read_csv("Demographic_Statistics_By_Zip_Code.csv")
+	\end{lstlisting}
+	\item Read now the help on \cc{read\_csv()} to see what options are available
+	\item Check:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	class(data1)
+	\end{lstlisting}
+	\item Note that the latter does not produce just \cc{"data.frame"}
+	\item The object that is created is a modern version of the data frame called \textit{tibble}
+	\item The \textbf{tibble} package is also a member of the \textbf{tidyverse} family
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{tibble} package}
+\begin{itemize}
+	\item Advantages of tibbles: 
+	\begin{itemize}
+		\item Better looking when printed in the console
+		\item Printing options can be controlled
+		\item Referencing (slicing) works analogically to data frames
+		\item Does not change the data type of inputs
+		\item Does not change variable names
+		\item Does not create row names
+	\end{itemize}
+	\item To convert a data frame to a tibble:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	df1 <- as.data.frame(matrix(1:9, nrow = 3))	
+	tb1 <- as_tibble(df1)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\section{Working with \textbf{dplyr}}
+\begin{frame}[fragile]
+\frametitle{Working with \textbf{dplyr}}
+\begin{itemize}
+	\item We will use the dataset that the book works with: flights from New York City in 2013
+	\begin{lstlisting}[style = rstyle, breaklines]
+	install.packages("nycflights13")
+	library(nycflights13)
+	print(flights)
+	\end{lstlisting}
+	\item Obviously, the data are organized in a tibble
+	\item We can now, for example, select specific rows based on specified values
+	\item In order to select all flights that took place on 27 July,
+	\begin{lstlisting}[style = rstyle, breaklines]
+	july27 <- filter(flights, month == 7, day == 27)	
+	\end{lstlisting}
+	\item Mind the double equality signs, they are logical checks!
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Working with \textbf{dplyr} (2)}
+\begin{itemize}
+	\item Boolean operators that are used: \cc{\&} (and), \cc{|} (or), and \cc{!} (not)
+	\item An \cc{or} example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	july7or27 <- filter(flights, (day == 7 | day == 27) & month == 7)
+	\end{lstlisting}
+	\item A \cc{not} example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	not_in_jan <- filter(flights, month != 1)
+	\end{lstlisting}
+	\item ...or another one:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	not_in_winter <- filter(flights, !(month %in% c(1,2,12)))
+	\end{lstlisting}
+	\item Note in the latter the \cc{\%in\%} function that serves as a convenient shorthand
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Working with \textbf{dplyr} (3)}
+\begin{itemize}
+	\item Data can be sorted in the following way:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	sort1 <- arrange(flights, dep_delay, carrier)	
+	\end{lstlisting}
+	\item In this example, the data will be sorted first according to departure delay, and then by carrier
+	\item Sorting in performed in ascending order
+	\item To sort in descending order:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	sort2 <- arrange(filter(flights, month == 1, day == 1), desc(dep_delay))	
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Working with \textbf{dplyr} (4)}
+\begin{itemize}
+	\item To select variables (columns) from a tibble/data frame:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	new_tbl1 <- select(flights, year, month, day, flight)	
+	\end{lstlisting}
+	\item Shortcut for selecting adjacent columns:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	new_tbl2 <- select(flights, year:day, flight)	
+	\end{lstlisting}
+	\item Select all columns with the exception of some:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	new_tbl3 <- select(flights, year:day, -c(hour, minute))
+	\end{lstlisting}
+	\item Options to the \cc{select()} function such as \cc{starts\_with()}, \cc{ends\_with()}, \cc{contains()}, etc. can be used, e.g.
+	\begin{lstlisting}[style = rstyle, breaklines]
+	new_tbl4 <- select(flights, starts_with("flig"))
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Working with \textbf{dplyr} (5)}
+\begin{itemize}
+	\item Renaming variables is also simple (new name comes first):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	flights1 <- rename(flights, airline = carrier)	
+	\end{lstlisting}
+	\item A way to rearrange columns:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	flights2 <- select(flights, time_hour, everything())
+	\end{lstlisting}
+	\item Here, the \cc{time\_hour} variable is moved to the first position, \cc{everything()} plays the role of everything else
+	\item New variables are created with
+	\begin{lstlisting}[style = rstyle, breaklines]
+	flights <- 	mutate(flights, travel_time = arr_time - dep_time)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Working with \textbf{dplyr} (6)}
+\begin{itemize}
+	\item Grouped summaries:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	by_airline <- group_by(flights, carrier)
+	summarize(by_airline, delay = mean(dep_delay, na.rm = TRUE))	
+	\end{lstlisting}
+	\item In this example, the average departure delay by airline is calculated
+	\item Grouping can be performed by more than one variable
+	\item In such cases, summaries can be calculated per level of grouping
+	\item Instead of performing operations one by one, the so-called pipe can be used, e.g.:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	avg_delay <- flights %>% 
+	  group_by(carrier) %>%
+	  summarize(mean(dep_delay, na.rm = TRUE))	
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+\end{document}
