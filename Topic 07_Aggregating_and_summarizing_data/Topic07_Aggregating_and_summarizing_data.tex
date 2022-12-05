@@ -1,0 +1,532 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+%\usepackage{gensymb}
+%\usepackage{verbatim}
+\usepackage{mathrsfs}  
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{\mathsf{E}}
+\DeclareMathOperator{\var}{\mathsf{Var}}
+\DeclareMathOperator{\cov}{\mathsf{Cov}}
+\DeclareMathOperator{\corr}{\mathsf{Corr}}
+\DeclareMathOperator{\plim}{plim}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\mad}{MAD}
+\DeclareMathOperator{\med}{median}
+
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+\lstdefinestyle{rstyle}%
+{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\color{blue},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstset{language=R,frame=single}    
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty
+
+\title{R403: Probabilistic and Statistical Computations\\ with R}
+\subtitle{Topic 7: \textcolor{myred}{Aggregating and Summarizing Data}}
+\author{Kaloyan Ganev}
+
+\date{2022/2023} 
+
+\begin{document}
+\maketitle
+	
+\begin{frame}[fragile]
+\frametitle{Lecture Contents}
+	\tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}[fragile]
+\frametitle{Introductory Notes}
+\begin{itemize}
+	\item R has a lot of built-in functions that could be useful in aggregating and summarizing data
+	
+	\item We will make a brief tour through some of the most commonly used ones
+	
+	\item A part of the discussion will naturally contain some review of concepts already introduced
+\end{itemize}
+\end{frame}
+
+\section{Summary Commands and Descriptive
+Statistics}\label{summary-commands-and-descriptive-statistics}
+
+\begin{frame}[fragile]
+\frametitle{Summary Commands and Descriptive Statistics}
+\begin{itemize}
+	\item Provide information which might suggest which analytical procedure would be most appropriate to apply to data
+	
+	\item With their aid, better understanding of the properties of data is achieved
+	
+	\item Also, they might point to data issues requiring additional pre-processing, cleaning, etc.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Summary Commands}
+\begin{itemize}
+	\item A good idea to start is to use the \cc{ls()} command to get the list of all named objects in memory
+	
+	\item Of course, you can view the objects also in the Environment browser of RStudio
+	
+	\item Let's use some data so that we exemplify with it
+	
+	\item Load the data on new residential buildings (\emph{residential.csv})
+	\begin{lstlisting}[style = rstyle, breaklines]
+	residential <- read.csv2("residential.csv", header = TRUE, skip = 4, blank.lines.skip = TRUE)
+	\end{lstlisting}
+
+	\item We can have a look at the data by printing the data frame in the console or displaying it using RStudio's point-and-click tools
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Summary Commands (2)}
+\begin{itemize}
+	\item If the data set is large, though, the data would be difficult to grasp
+	
+	\item Using the \cc{str()} command, you can get a concise summary of the characteristics of the data:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	str(residential)
+	\end{lstlisting}
+	
+	\item Of course, the same result is obtainable by clicking on the blue arrow next to the name of the data frame in the environment browser
+	
+	\item Note that \cc{str()} is specifically suited to explore the structure of the object of interest
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Summary Commands (3)}
+\begin{itemize}
+	\item In order to get a statistical summary, just type:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	summary(residential)
+	\end{lstlisting}
+
+	\item There might be nuances of this command's output when different object types are involved (character vectors, factors, matrices, models, etc.)
+	
+	\item Some more summary commands for lists and tables:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	names() # Returns the names of list elements/data frame columns
+	\end{lstlisting}
+
+	\item \ldots and some such for vectors, matrices, arrays, and data frames:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	names()
+	colnames()
+	rownames()
+	dimnames()
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Summary Statistics for Vectors}
+\begin{itemize}
+	\item Maximum value:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	max(x, na.rm = FALSE)
+	\end{lstlisting}
+
+	\item Usually missing observations should be removed from the calculation, therefore \cc{na.rm = TRUE} is used
+	
+	\item Otherwise, you will get an \emph{NA} value for a maximum
+	
+	\item Minimum value:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	min(x, na.rm = FALSE) # Same logic as above
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Summary Statistics for Vectors (2)}
+\begin{itemize}
+	\item Length of vector:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	length(x)
+	\end{lstlisting}
+
+	\item Note that \emph{NA}'s are also values so they still count against the length of a vector (to omit \emph{NA}'s, use \cc{length(na.omit(x))})
+	
+	\item Sum of all vector elements:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	sum(x, na.rm = FALSE)
+	\end{lstlisting}
+	
+	\item Arithmetic mean, median, standard deviation, and variance:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	mean(x, na.rm = FALSE)
+	median( x, na.rm = FALSE)
+	sd(x, na.rm = FALSE)
+	var(x, na.rm = FALSE)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Summary Statistics for Vectors (3)}
+\begin{itemize}
+	\item Median absolute deviation (a robust\footnote{Meaning resilient to outliers in the present case.} measure of dispersion, sometimes better than the standard deviation):
+	\[
+		\mad(X) = \med(|X_{i} - \med(X)|)
+	\]
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	mad(x, na.rm = FALSE)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Summary Statistics for Vectors (4)}
+\begin{itemize}
+	\item Quantiles:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	quantile(x) # The default 0, 25, 50, 75, and 100% quantiles
+	\end{lstlisting}
+	
+	\item If you need to calculate different quantiles (e.g.~33, 66, and 99\%):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	quantile(x, probs = c(0.33, 0.66, 0.99), na.rm = TRUE, names = TRUE)
+	\end{lstlisting}
+
+	\item Cumulative sum, product, maximum, and minimum:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	cumsum(x)
+	cumprod(x)
+	cummax(x)
+	cummin(x)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Summary Statistics for Data Frames}
+\begin{itemize}
+	\item We've already discussed \cc{summary()}
+	
+	\item The following are also clear: \cc{min(),\ max(),\ length(),\ sum()}
+	
+	\item It also happened that we used \cc{rowSums()} and \cc{colSums()}; \cc{colMeans()} and \cc{rowMeans()} are analogical
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Summary Statistics for Matrices}
+\begin{itemize}
+	\item To apply a statistical function to a part of a matrix, e.g. a column or a row:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	m1 <- matrix(1:24, nrow = 4)
+	mean(m1[3,])
+	mean(m1[,2])
+	\end{lstlisting}
+
+	\item \cc{colMeans()} and \cc{rowMeans()} can do this job, too
+	
+	\item The commands \cc{rowSums()} and \cc{colSums()} also work for matrices
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Summary Statistics for Lists}
+\begin{itemize}
+	\item Not straightforward to have such ({why?})
+	
+	\item \$ notation can be used but it may be somewhat inconvenient
+	
+	\item Still, there some ways to do that, but we will leave matters for the topic on loops and loop commands
+\end{itemize}
+\end{frame}
+
+\section{Tabulation}
+\begin{frame}[fragile]
+\frametitle{Summary Tables}
+\begin{itemize}
+	\item In order to summarize data samples, the \cc{table()} command can be used
+	
+	\item It also allows creating, altering, and manipulating table objects including two types of special tables:
+	\begin{itemize}
+  	  \item Contingency tables
+  	  \item Complex (flat) contingency tables
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Table Summaries for Vectors}
+\begin{itemize}
+	\item Let's simulate tossing a coint 1000000 times
+	\begin{lstlisting}[style = rstyle, breaklines]
+	coin <- sample(c("H", "T"), 1000000)
+	\end{lstlisting}
+	
+	\item We can see a summary of counts using \cc{table()} again:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	table2 <- table(coin)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Contingency Tables}
+\begin{itemize}
+	\item The term was coined by Karl Pearson in 1904
+	
+	\item Also called cross-tabs/two-way tables
+	
+	\item Practically a table of counts; used to display the multivariate frequency distribution of the selected categorical variables
+	
+	\item In a sense, it is the analogue to scatter plots for continuous variables
+	
+	\item By this, they provide intuition on the potential statistical relationships among variables
+	
+	\item A complex (flat) table is a contingency table that is used to compress multiple dimensions of data to two dimensions only and a single table
+\end{itemize}
+
+\end{frame}
+\begin{frame}[fragile]
+\frametitle{An Example Simple Contingency Table}
+\begin{longtable}[]{@{}lllll@{}}
+\toprule
+Gender / Hair colour & Black hair & Brown hair & Blond hair & Total\tabularnewline
+\midrule
+\endhead
+Male & 70 & 25 & 40 & 135\tabularnewline
+Female & 30 & 20 & 25 & 75\tabularnewline
+Total & 100 & 45 & 65 & 210\tabularnewline
+\bottomrule
+\end{longtable}
+
+\begin{itemize}
+	\item In this table, there are two variables: gender and hair colour
+	
+	\item The former determines the row categories, and the latter determines the column categories
+	
+	\item Each combination of row and column is called a \textbf{cell}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Requirements for Contingency Tables}
+\begin{itemize}
+	\item The requirements stem from the specifics of statistical methods applied to such tables
+	
+	\item First, observations should be \textbf{independent} from each other
+	
+	\item Second, categories should be \textbf{exclusive}, i.e.~it is possible for an observation to fall only in one of the categories; in other words, categories cannot overlap
+	
+	\item Third, categories should be \textbf{exhaustive}, i.e.~the full range of possibilities is represented making it impossible for an observation to fail falling in a category
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{How to Create a Contingency Table in R}
+\begin{itemize}
+	\item Get the values of the two variables in two vectors (here we make a new random sample so the numbers in above table will not be repeated):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	gender <- sample(c("Male", "Female"), 210, replace = TRUE)
+	hair_col <- sample(c("Black", "Brown", "Blond"), 210, replace = TRUE)
+	\end{lstlisting}
+	
+	\item Make a data frame and then create the contingency table from it:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	data1 <- as.data.frame(cbind(gender, hair_col))
+	table1 <- table(data1$gender, data1$hair_col)
+	\end{lstlisting}
+	
+	\item In general, this can be done for any data frame containing categorical variables
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Flat Contingency Tables}
+\begin{itemize}
+	\item Let's take another example
+	
+	\item Assume you gather a random sample of data on educational degree, salary and productivity of several workers (20 in this example)
+	
+	\item We generate the data at random with some prior restriction with the following code:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	degree <- sample(c("BSc", "MSc", "PhD"), 20, replace = TRUE)
+	salary <- sample(c("high", "medium size", "low"), 20, replace = TRUE)
+	productivity <- sample(seq(120,160, by = 0.5), 20, replace = TRUE)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Flat Contingency Tables (2)}
+\begin{itemize}
+	\item Let's get those data into a data frame:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	df1 <- as.data.frame(cbind(degree, productivity, salary))
+	\end{lstlisting}
+	
+	\item There are some issues of the data type of productivity which we correct in the following way:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	df1$productivity <- as.numeric(as.character(df1$productivity))
+	\end{lstlisting}
+
+	\item Now, let's use the \cc{table()} command to produce a summary:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	table(df1)
+	\end{lstlisting}
+
+	\item Because of the several dimensions, several tables are produced
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Flat Contingency Tables (3)}
+\begin{itemize}
+	\item In order to get just one table instead of the many, we can create a flat contingency table that squeezes everything in two dimensions
+	
+	\item Flat contingency tables are created using the \cc{ftable()} command
+	
+	\item For example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	ftable(df1)
+	\end{lstlisting}
+
+	\item You can now take a close look at the table that is produced and make make a comparison with the previous \cc{table()} output
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Proportions Tables}
+\begin{itemize}
+	\item Can be generated on data frames, matrices or tables
+	
+	\item Note that data frames should contain only numerical variables in order not to get an error
+	
+	\item To begin with, let's use \emph{table1} which is already available
+	
+	\item Type and run:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	prop.table(table1)
+	\end{lstlisting}
+
+	\item The command outputs proportions (frequencies) as shares of the grand total
+	
+	\item You can also get proportions as shares of row totals or column totals, respectively by running:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	prop.table(table1, margin = 1)
+	prop.table(table1, margin = 2)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Proportions Tables (2)}
+\begin{itemize}
+	\item See what happens when the same is applied to a numerics-only data frame
+	
+	\item Generate the following salary vector:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	salary2 <- sample(seq(2500,3500, by = 0.01), 20, replace = TRUE)
+	\end{lstlisting}
+	
+	\item Make the data frame:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	df2 <- as.data.frame(cbind(productivity, salary2))
+	\end{lstlisting}
+
+	\item Check out:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	prop.table(as.matrix(df2))
+	\end{lstlisting}
+
+	\item Try with the two other options
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Further Readings}
+\begin{itemize}
+	\item Gardener, M. (2012): \emph{Beginning R: The Statistical Programming Language}, Wiley (ch.~4)
+
+	\item Spector's book (see syllabus), p.~101-107
+	
+	\item R documentation and help
+\end{itemize}
+\end{frame}
+\end{document}
