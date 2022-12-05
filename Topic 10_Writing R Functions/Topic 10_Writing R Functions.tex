@@ -1,0 +1,423 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+%\usepackage{gensymb}
+%\usepackage{verbatim}
+\usepackage{mathrsfs}  
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{\mathsf{E}}
+\DeclareMathOperator{\var}{\mathsf{Var}}
+\DeclareMathOperator{\cov}{\mathsf{Cov}}
+\DeclareMathOperator{\corr}{\mathsf{Corr}}
+\DeclareMathOperator{\plim}{plim}
+\DeclareMathOperator{\rank}{rank}
+
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+\lstdefinestyle{rstyle}%
+{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\color{blue},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstset{language=R,frame=single}    
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty
+
+\title{R403: Probabilistic and Statistical Computations\\ with R}
+\subtitle{Topic 10: \textcolor{myred}{Writing R Functions}}
+\author{Kaloyan Ganev}
+
+\date{2022/2023} 
+
+\begin{document}
+\maketitle
+
+\begin{frame}[fragile]
+\frametitle{Lecture Contents}
+\tableofcontents
+\end{frame}
+  
+\section{Introduction}
+\begin{frame}[fragile]
+\frametitle{Introduction}
+\begin{itemize}
+	\item Functions are used in R all the time, and you already used a significant variety of them
+	\item Of course, there cannot be a pre-programmed function for everything possible (actually not only in R but in any programming language)
+	\item Therefore, it is sometimes very useful to create one or several functions for specific but recurring jobs
+	\item Before that, because of the fact that functions use variables as their arguments, it is a good idea to have a quick discussion on environments in R
+\end{itemize}
+\end{frame}
+
+\section{Notes on environments}
+\begin{frame}[fragile]
+\frametitle{What is an environment?}
+\begin{itemize}
+	\item Think back of how we defined variables: as containers for values
+	\item Environments are quite similar: you can think of them as shelves for such containers (i.e. they are in a way containers for containers)
+	\item More literally, environments are places to store variables (or, R objects in general)
+	\item However, they are themselves treated as a special type of variable
+	\item This means that environments can be created, manipulated, assigned to symbols, etc.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{What is an environment? (2)}
+\begin{itemize}
+	\item The `official' R definition for an environment:
+	\begin{quotation}
+		\noindent Environments can be thought of as consisting of two things. A frame, consisting of a set of symbol-value pairs, and an enclosure, a pointer to an enclosing environment. When R looks up the value for a symbol the frame is examined and if a matching symbol is found its value will be returned. If not, the enclosing environment is then accessed and the process repeated. Environments form a tree structure in which the enclosures play the role of parents. The tree of environments is rooted in an empty environment, available through emptyenv(), which has no parent. It is the direct parent of the environment of the base package (available through the baseenv() function). Formerly baseenv() had the special value NULL, but as from version 2.4.0, the use of NULL as an environment is defunct.
+	\end{quotation} 	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{What is an environment? (3)}
+\begin{itemize}
+	\item Environments bear most similarities with lists in that they can hold various types of data
+	\item It turns out that environments (logically) are handled through syntax similar to that for lists
+	\item Also, R has capabilities to coerce lists to environments and vice versa
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The global environment}
+\begin{itemize}
+	\item This is the environment that we naturally work with (even without thinking explicitly of it)
+	\item It is also called the \textbf{user workspace}
+	\item When a function is called, R automatically creates an environment where the variables specific to that function are stored
+	\item Also, when R starts, it loads several packages by default (each package contains a number of functions) and the corresponding environments are thus also loaded
+	\item You can check that by clicking on the drop-down list in the top-right panel of RStudio titled ``Environment'' (maybe you would also like to load an additional package to see what happens)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Creating new environments}
+\begin{itemize}
+	\item Most of the time you don't do that deliberately
+	\item Anyway, if you need to create one, you type:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	env1 <- new.env()
+	\end{lstlisting}
+	\item Using list notation then, variables can be assigned to this environment
+	\item The latter can be done in two ways, e.g.:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	env1[["v1"]] <- c(1,2,3)
+	env1$v1 <- c(1,2,3)
+	\end{lstlisting}
+	\item List notation then can also be used to call variables
+	\item You can list all objects in an environment by using an additional argument to \cc{ls()}:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	ls(envir = env1)
+	\end{lstlisting}
+	\item Conversion between lists and environments is carried out by means of \cc{as.list()} and \cc{as.environment()}
+\end{itemize} 
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Environment hierarchy}
+\begin{itemize}
+	\item Environments obey a tree structure
+	\item On top is a special environment called the \textbf{empty environment}
+	\item Therefore, any other environment is nested within another environment
+	\item More generally you can think of environments as library rooms where each shelving system has shelves, and each shell contains books, each book then contains chapters, etc.; the empty room would be the empty environment
+\end{itemize}
+\end{frame}
+
+\section{Functions}
+\begin{frame}[fragile]
+\frametitle{What are functions?}
+\begin{itemize}
+	\item R functions perform operations on other objects
+	\item Like other programming languages, R provides options to create user-defined functions
+	\item Thus, the base capabilities of the software are extended to tasks which have not found a formal implementation (yet)
+	\item Moreover, the language allows to create functions of other functions which provides enormous flexibility and versatility
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{How do functions work?}
+\begin{itemize}
+	\item Functions have arguments (just like in mathematics)
+	\item Those arguments are R objects
+	\item The statements that the function contains in its body carry out the desired operations on objects
+	\item The function returns other R objects which can be of any data type
+	\item We already used many built-in functions
+	\item We can explore their structure by just typing their name in the console (without the parentheses and without any arguments)
+	\item For example, typing
+	\begin{lstlisting}[style = rstyle, breaklines]
+	sd
+	\end{lstlisting}
+	outputs the structure of the function that calculates the standard deviation of a variable
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Components of functions}
+\begin{itemize}
+	\item Each function has three components: body, formals, and environment
+	\item The body contains the code that is executed within the function
+	\item For a known function, this components can be explored via the \cc{body()} command
+	\item For example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	body(rnorm)
+	\end{lstlisting}
+	\item Formals is the list of arguments that the function can take and which control how the function can be called
+	\begin{lstlisting}[style = rstyle, breaklines]
+	formals(rnorm)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Components of functions (2)}
+\begin{itemize}
+	\item Each function has its own environment
+	\item This environment contains all the variables that are defined by the function
+	\item In order to check a function's environment, type for example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	environment(mean)
+	\end{lstlisting}
+	\item The function and its environment are collectively known as a function's \textbf{closure}
+	\item Note that \cc{body()}, \cc{formals()}, and \cc{environment()} can also be used to modify the respective components of functions (just for info, avoid it)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Primitive functions}
+\begin{itemize}
+	\item They are an exception in that they do not have three components
+	\item Found only in the base package
+	\item For such functions, \cc{body()}, \cc{formals()}, and \cc{environment()} hold the NULL value
+	\item Examples of such functions are \cc{sum(), sin(), cos()}, etc.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Creating functions}
+\begin{itemize}
+	\item Functions are (of course) created by assignment with the \cc{function} command
+	\item Let's take an example to illustrate the process
+	\item We will create a function that calculates the volume of a cylinder:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	cyl_vol <- function(r,h){
+		pi*r^2*h
+		}
+	\end{lstlisting}
+	\item You can see the function appearing in the top-right panel; you can click on it to view its structure
+	\item It is then called by means of (using here 2 as the radius and 5 as the height):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	cyl_vol(2,5)
+	\end{lstlisting}
+	\item The example shows the typical features of functions
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Creating functions (2)}
+\begin{itemize}
+	\item As it is obvious, the keyword \cc{function} is followed by a list of arguments (separated by commas)
+	\item Arguments can be supplied in three ways:
+	\begin{itemize}
+		\item Through a symbol (symbols)
+		\item Through a \cc{symbol = expression} statement
+		\item Through the special formal argument \cc{\ldots}
+	\end{itemize}
+	\item What follows is the body of the function surrounded by curly braces
+	\item The body may contain valid R expressions
+	\item In this example the function is named but there can also be anonymous functions
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Creating functions (3)}
+\begin{itemize}
+	\item Two more examples to illustrate the two other approaches used in creating functions
+	\item In the first one, we create a function which finds finds the $n$th root of an arbitrary number
+	\begin{lstlisting}[style = rstyle, breaklines]
+	root_cplx <- function(x, root = 2){
+	 	x <- as.complex(x)
+	 	x^(1/root)
+	 	}
+	\end{lstlisting}
+	\item If you don't specify a second argument, it will automatically calculate the square root of the number
+	\item The function is called as follows
+	\begin{lstlisting}[style = rstyle, breaklines]
+	root_cplx(-2,4) # or:
+	root_cplx(-2, root = 4) # or:
+	root_cplx(root = 4, -2)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Creating functions (4)}
+\begin{itemize}
+	\item In the second example, we use the special argument \cc{\ldots}
+	\item This argument stands for other arguments (can be any number), i.e. it allows creating a function that has an arbitrary number of arguments
+	\item Can be used for example to absorb a subset of all arguments into an intermediate function
+	\item The latter can then be passed on to functions which are called after the function in question
+	\item The \cc{plot(x,y,\ldots)} function is often used as an example of such a function (plotting is discussed in a later topic)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Some more examples of functions}
+\begin{itemize}
+	\item Standardize a variable:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	standardize <- function(x, m = mean(x), s = sd(x)){
+ 		(x - m) / s
+		}
+	\end{lstlisting}
+	\item Mode (most frequent observation):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	Mode <- function(x) {
+		ux <- unique(x)
+		ux[which.max(tabulate(match(x, ux)))]
+		}
+	\end{lstlisting}
+	\item Note however that the latter is far from perfect
+	\item For proper mode estimation, use the \textbf{modeest} package (see below)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Some more examples of functions (2)}
+\begin{itemize}
+	\item In the latter example, \cc{unique()} returns a vector, data frame or array like \cc{x} but with duplicate elements/rows removed
+	\item \cc{which.max()} finds the index of the maximum of a numeric (or logical) vector
+	\item \cc{tabulate()} takes the integer-valued vector bin and counts the number of times each integer occurs in it
+	\item \cc{match()} returns a vector of the positions of matches of its first argument in its second.
+	\item However, this code has some flaws (\textcolor{red}{what are they?})
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Some more examples of functions (3)}
+\begin{itemize}
+	\item A better way to find the mode:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(modeest)
+	mlv(var1, method = "mfv")
+	\end{lstlisting}
+	\item \cc{mlv()} calculates the most likely value
+	\item The method used is \cc{mfv}, i.e. most frequent value
+	\item Other methods can be looked up in the documentation
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Storing user-created functions}
+\begin{itemize}
+	\item There are several ways to preserve your work on creating functions for future use
+	\item One of them, of course, is to write them in an R script which is saved before quitting R
+	\item Another possibility is to save function objects which you created and which reside in your global environment
+	\begin{lstlisting}[style = rstyle, breaklines]
+	save(function1, function2, file = "MyFuncs.R")	
+	\end{lstlisting}
+	\item Note that this will not be the usual text file but a binary file
+	\item Next time you need your functions, you can use them after issuing:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	load("MyFuncs.R")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Storing user-created functions (2)}
+\begin{itemize}
+	\item If you still need your functions in a text file that you can edit, use:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dump(c("function1", "function2"), file = "MyFuncs.R")
+	\end{lstlisting}
+	\item This time, the names of functions should be in quotes
+	\item Later on, you can load the functions back to R by:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	source("MyFuncs.R")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{References}
+\begin{itemize}
+	\item Cotton, R. (2013): \emph{Learning R}, O'Reilly, Ch. 6
+	\item Peng, R. (2016): \emph{R Programming for Data Science}, Leanpub, Ch. 15
+\end{itemize}
+\end{frame}
+\end{document}

@@ -1,0 +1,731 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage{inputenc}
+\usepackage[english]{babel}
+\inputencoding{utf8}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+\usepackage{gensymb}
+%\usepackage{verbatim}
+\usepackage{mathrsfs}  
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{\mathsf{E}}
+\DeclareMathOperator{\var}{\mathsf{Var}}
+\DeclareMathOperator{\cov}{\mathsf{Cov}}
+\DeclareMathOperator{\corr}{\mathsf{Corr}}
+\DeclareMathOperator{\plim}{plim}
+\DeclareMathOperator{\rank}{rank}
+
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+% Get rid of captions in tables
+\usepackage{caption}
+\captionsetup[table]{labelformat=empty}
+
+\lstdefinestyle{rstyle}%
+{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\color{blue},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstset{language=R,frame=single}    
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty
+
+
+\title{R403: Probabilistic and Statistical Computations\\ with R}
+\subtitle{Lecture 16: \textcolor{myred}{Analysis of Covariance (ANCOVA)}}
+\author{Kaloyan Ganev}
+
+\date{2022/2023} 
+
+\begin{document}
+\maketitle
+\begin{frame}[fragile]
+\frametitle{Lecture Contents}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}[fragile]
+\frametitle{Introduction}
+\begin{itemize}
+	\item Invented also by R. Fisher
+	\item Similar to ANOVA: also used to test equality of population means
+	\item Yet different: integrates ANOVA and regression analysis
+	\item Applicability: both to observational and to experimental studies
+	\item Involves at least three variables: one dependent variable, one independent variable, and one covariate
+	\item The independent variable is a categorical one (also called a \emph{treatment}, as in ANOVA)
+	\item The covariate\footnote{Also called \emph{concomitant variable}, \emph{nuisance variable}, etc. There may be more that one covariate.} is a variable which is likely to be correlated with the dependent variable
+	\item \textcolor{red}{In brief: ANCOVA is a special type of regression analysis including both quantitative and categorical regressors}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Introduction (2)}
+\begin{itemize}
+	\item Covariates are used to control for effects that are not of primary interest
+	\item This simultaneously leads to the reduction of the variance of the error term in ANOVA
+	\item Also, they help obtain conditionally unbiased effects of treatments
+	\item In experimental studies, their inclusion helps reduce the bias that may result from random differences between groups \emph{before} the application of treatments
+\end{itemize}
+\end{frame}
+
+\section{Single-Factor ANCOVA}
+\begin{frame}[fragile]
+\frametitle{Single-Factor ANCOVA}
+\begin{itemize}
+	\item Let there be $i = 1,\ldots, a$ samples (factor levels, groups)
+	\item Let each sample contain $n_{i}$ elements (cases)
+	\item The total number of cases is $\displaystyle n = \sum_{i=1}^{a}n_{i}$
+	\item Let $Y$ be the response (dependent) variable; $Y_{ij}$ then denotes its $j$th case in the $i$th group
+	\item We will consider the version with only one covariate, call it $X$ ($X_{ij}$ is the value of the covariate that corresponds to the $j$th case in the $i$th group)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-Factor ANCOVA (2)}
+\begin{itemize}
+	\item Start with the single-factor fixed-effects ANOVA model:
+	\[
+		Y_{ij} = \mu_{\cdot} + \tau_{i} + \varepsilon_{ij},\quad i = 1,2,\ldots,a,\, j = 1,2,\ldots,n_{i}
+	\]
+	where $\varepsilon_{ij} \sim N(0,\sigma^{2})$
+	\item $\mu_{\cdot}$ is the overall (grand) mean
+	\item $\tau_{i}$ are the fixed treatment effects, and $\sum \tau_{i} = 0$
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-Factor ANCOVA (3)}
+\begin{itemize}
+	\item To this we add a covariate that has a relationship with the dependent variable:
+	\[
+		Y_{ij} = \mu_{\cdot} + \tau_{i} + \textcolor{red}{\gamma X_{ij}} + \varepsilon_{ij}
+	\]
+	where $\gamma$ is a regression coefficient, and $X_{ij}$ are pre-determined (fixed, non-stochastic)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-Factor ANCOVA (4)}
+Warnings on the Choice of Covariates
+\begin{itemize}
+	\item Should be made very carefully so as to `add value' to the model
+	\item Covariates which bear no relation to the dependent variable will bring no additional insight or quality of estimates; in such cases it is better to stick to the simpler ANOVA 
+	\item Covariates should either be observed before the application of the treatment(s) or there should be guarantees that they won't be affected by the study
+	\item If covariates are affected by the treatment(s), then ANCOVA might produce results that do not adequately reflect the presence/absence of effects
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-Factor ANCOVA (5)}
+\begin{itemize}
+	\item After including $X_{ij}$ in the relationship, $\mu_{\cdot}$ is no longer the overall mean of $Y_{ij}$
+	\item If, however, we center $X_{ij}$ around their grand mean, then $\mu_{\cdot}$ again becomes $Y$'s grand mean:
+	\[
+		Y_{ij} = \mu_{\cdot} + \tau_{i} + \textcolor{red}{\gamma (X_{ij} - \overline{X}_{\cdot\cdot})} + \varepsilon_{ij}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-Factor ANCOVA (6)}
+\begin{itemize}
+	\item Taking the mathematical expectation of the latter yields:
+	\[
+		\mathsf{E}(Y_{ij}) = \mu_{\cdot} + \tau_{i} + \gamma (X_{ij} - \overline{X}_{\cdot\cdot})
+	\]
+	\item The variance is respectively:
+	\[
+		\mathsf{Var}(Y_{ij}) = \sigma^{2}
+	\]
+	\item Overall, since $\varepsilon_{ij} \sim n.i.d. (0, \sigma^{2})$, it follows that:
+	\[
+		Y_{ij} \sim n.i.d.(\mu_{ij}, \sigma^{2})
+	\]
+	where $\mu_{ij} = \mu_{\cdot} + \tau_{i} + \gamma (X_{ij} - \overline{X}_{\cdot\cdot})$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-Factor ANCOVA (7)}
+\begin{itemize}
+	\item Note that this result is different from the one in the the ANOVA model (recall it was $\mathsf{E}(Y_{ij}) = \mu_{i}$)
+	\item The major difference stems from the dependence on the values of the covariate (in addition to the dependence on the treatment)
+	\item The dependent variable in the ANCOVA model therefore is the expected response to the $i$th treatment
+	\item As $\tau_{i}$ have (potentially) different values, that responses are given by regression lines (one line per treatment):
+	\[
+		\mu_{ij} = \mu_{\cdot} + \tau_{i} + \gamma (X_{ij} - \overline{X}_{\cdot\cdot})
+	\]
+\end{itemize} 
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-Factor ANCOVA (8)}
+\centerline{\includegraphics[scale=0.9]{./data/fig1}}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-Factor ANCOVA (9)}
+\begin{itemize}
+	\item Note that the `origin' is $X - \overline{X}_{\cdot\cdot} = 0$, i.e. $X = \overline{X}_{\cdot\cdot}$
+	\item Also, pay attention that all three regression lines are parallel to each other (slope equals $\gamma$)
+	\item From the latter follows that there is no more a fixed mean response to treatment $i$
+	\item The effects are measured by the vertical distances between two regression lines
+	\item For example, the comparison of effects of Treatment 1 and Treatment 2 is estimated as:
+	\[
+		\textcolor{blue}{\mu_{\cdot} + \tau_{1}} - \textcolor{red}{(\mu_{\cdot} + \tau_{2})} =  
+        \tikz[baseline]{
+            \node[fill=green!40,ellipse,anchor=base] (t1)
+            {$ \tau_{1} - \tau_{2}$};
+        }
+	\]
+	\item If all treatments have the same mean response for any $X$, then all such effects equal zero
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-Factor ANCOVA: Possible Extensions}
+\begin{itemize}
+	\item \textbf{Stochastic covariates:} the ANCOVA still remains valid, if for any possible values of $X$ the model can be interpreted as a conditional one
+	\item \textbf{Non-linearity of the relationship between $Y$ and $X$:} linearity is not essential so for example a cubic relationship can be used:
+	\[
+		Y_{ij} = \mu_{\cdot} + \tau_{i} + \gamma_{1} (X_{ij} - \overline{X}_{\cdot\cdot})  + \gamma_{2} (X_{ij} - \overline{X}_{\cdot\cdot})^{2} + \gamma_{3} (X_{ij} - \overline{X}_{\cdot\cdot})^{3} + \varepsilon_{ij}
+	\]
+	What is essential is the constancy of the $\gamma$'s, i.e. the response functions should be parallel to each other\footnote{This also means there is no interaction among treatments.}
+	\item \textbf{Multiple covariates:} inclusion is straightforward, e.g.:
+	\[
+		Y_{ij} = \mu_{\cdot} + \tau_{i} + \gamma_{1} (X_{ij1} - \overline{X}_{\cdot\cdot1})  + \gamma_{2} (X_{ij2} - \overline{X}_{\cdot\cdot2}) + \varepsilon_{ij}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{ANCOVA: Regression Formulation}
+\begin{itemize}
+	\item A convenient way to estimate the model parameters
+	\item Specifically, this convenience is implemented in statistical packages, including \textcolor{red}{R}
+	\item Take the single-factor, single-covariate ANCOVA model
+	\item Let the number of treatments (level) be $r$
+	\item Define $r-1$ indicator variables in the following way:
+	\[
+		I_{k} = \left\{
+		\begin{array}{lcl}
+			1, \textsf{ in case of treatment } k\\
+			-1, \textsf{ in case of treatment } r\\
+			0,\textsf{ otherwise}
+		\end{array}
+		\right.,
+	\]
+	where $k = 1,\ldots,r-1$
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{ANCOVA: Regression Formulation (2)}
+\begin{itemize}
+	\item Denote:
+	\[
+		x_{ij} = X_{ij} - \overline{X}_{\cdot\cdot}
+	\]
+	\item Then the ANCOVA model can be written as:
+	\[
+		Y_{ij} = \mu_{\cdot} + \tau_{1}I_{ij,1} + \ldots + \tau_{r-1}I_{ij,r-1} + \gamma x_{ij} + \varepsilon_{ij}
+	\]
+	\item The $\tau$'s turn out to be the regression coefficients in this formulation
+	\item \textcolor{red}{Note:} \textcolor{orange}{In R we will use the programmed routines to estimate the coefficients. They are somewhat different and slightly roundabout. This also means that they do not follow the way of solving the problem found in the book}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{ANCOVA: Regression Formulation (3)}
+The following assumptions for appropriateness should hold before running the regression:
+\begin{enumerate}
+	\item $\varepsilon_{ij} \sim n.i.d.(0,\sigma^{2})$
+	\item Linearity of regression with respect to covariate
+	\item Constancy of $\gamma$ (i.e. slopes of regression lines across treatments should be equal)
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{ANCOVA: Regression Formulation (4)}
+\begin{itemize}
+	\item The main hypothesis to be tested coincides with that of ANOVA, i.e.:
+	\[
+			H_{0}:\, \tau_{1} = \tau_{2} = \ldots = \tau_{r} = 0
+	\]
+	against:
+	\[
+		H_{1}:\, \textsf{at least one } \tau \neq 0
+	\]
+	\item In the regression setting, the test boils down to testing whether a group of regression coefficients are simultaneously equal to zero
+	\item This is done by means of a partial $F$-test
+	\item If the result is statistically significant, the cause should be investigated
+	\item For example, pairwise comparisons of the $\tau$'s should be made
+\end{itemize}
+\end{frame}
+
+\section{Single-factor ANCOVA: An Example in R}
+\begin{frame}[fragile]
+\frametitle{An Example in R}
+\begin{itemize}
+	\item Adapted to R from Kutner et al. (2004), p. 926
+	\item A company sells crackers, and wants to know the effects of three different types of promotions:
+	\begin{enumerate}
+		\item Treatment 1: Sampling by customers in store
+		\item Treatment 2: Additional shelf space
+		\item Treatment 3: Special display shelves in addition to regular shelf space
+	\end{enumerate}
+		\item Fifteen stores' counts of sales\footnote{i.e. number of sales} were studied; five stores were assigned to each treatment
+		\item The following table contains data on the number of sales $Y$ during the promotional period, and on the number of sales $X$ in the preceding period (\textcolor{red}{note:} $X$ is the covariate!)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (2)}
+\begin{tabular}{ccccccccccccccc}
+\hline
+ & \multicolumn{14}{c}{Store ($j$)}\\
+\cline{2-15}
+Treatment & \multicolumn{2}{c}{1} & & \multicolumn{2}{c}{2} & & \multicolumn{2}{c}{3} & & \multicolumn{2}{c}{4} && \multicolumn{2}{c}{5}\\
+\cline{2-3} \cline{5-6} \cline{8-9} \cline{11-12} \cline{14-15}
+$i$ & $Y_{i1}$ & $X_{i1}$ & & $Y_{i2}$ & $X_{i2}$ & & $Y_{i3}$ & $X_{i3}$ && $Y_{i4}$ & $X_{i4}$ && $Y_{i5}$ & $X_{i5}$\\
+1 & 38 & 21 && 39 & 26 && 36 & 22 && 45 & 28 && 33 & 19 \\
+2 & 43 & 34 && 38 & 26 && 38 & 29 && 27 & 18 && 34 & 25\\
+3 & 24 & 23 && 32 & 29 && 31 & 30 && 21 & 16 && 28 & 29
+\end{tabular}
+
+\begin{itemize}
+	\item The data are contained also in \texttt{stores.csv}
+	\item Load this file in R via:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	stores <- read.csv2(stores.csv)
+	\end{lstlisting}
+	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (3)}
+\begin{itemize}
+	\item \ldots and set factors:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	stores$treatment <- as.factor(stores$treatment)
+	stores$store <- as.factor(stores$store)
+	attach(stores)
+	\end{lstlisting}
+	\item Then plot the result:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	library(ggplot2)
+	ggplot(data=stores,aes(x=X,y=Y,col=treatment)) + 
+	  geom_point(size=I(6)) + 
+	  xlab("Sales in preceding period") + 
+	  ylab("Sales in promotion period") +
+	  theme_minimal()
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (4)}
+\centerline{\includegraphics[scale=0.45]{./data/fig2}}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (5)}
+\begin{itemize}
+	\item The grand mean equals 25:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	mean(X)
+	\end{lstlisting}
+	\item Generate the centred covariate:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	xcov <- X - mean(X) 
+	\end{lstlisting}
+	\item Run the ANCOVA regression:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	ancova1 <- lm(Y ~ treatment + xcov)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (6)}
+\begin{itemize}
+	\item Graph data and fitted lines:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	library(latex2exp)
+
+	ggplot(data=stores,aes(x=xcov,y=Y,col=treatment)) + 
+	  geom_point(size=6) + geom_abline(aes(slope = ancova1$coefficients[4],intercept = ancova1$coefficients[1])) + 
+	  geom_abline(aes(slope = ancova1$coefficients[4],intercept = ancova1$coefficients[1]+ancova1$coefficients[2])) + 
+	  geom_abline(aes(slope = ancova1$coefficients[4],intercept = ancova1$coefficients[1]+ancova1$coefficients[3])) +
+	  xlab(TeX('$X - \\bar{X}_{\\cdot\\cdot}$')) + ylab(TeX('Y')) + 
+	  geom_vline(xintercept = 0, lty = 2) + 
+	  theme_minimal()
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (7)}
+\centerline{\includegraphics[scale=0.45]{./data/fig3}}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (8)}
+\begin{itemize}
+	\item How to interpret those results? First, look again at the estimation output
+	\item Note that $\gamma = 0.8986$ (this is the slope)
+	\item We want to find $\mu_{\cdot}$ and all $\tau$'s
+	\item (Intercept) ($=39.8174$) in the regression output gives the intersection point of the regression line and the vertical line at $X - \overline{X}_{\cdot\cdot}$; it also equals $\mu_{\cdot} + \tau_{1}$
+	\item The next two coefficients provide the respective differences of intercepts of treatment 2 and treatment 3 from the intercept of treatment 1
+	\item Therefore, $\mu_{\cdot} + \tau_{2} = 39.8174 - 5.0754 = 34.742$, and $\mu_{\cdot} + \tau_{3} = 39.8174 - 12.9768 = 26.8406$
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (9)}
+\begin{itemize}
+	\item Summing the three intercepts yields:
+	\[
+		\mu_{\cdot} + \tau_{1} + \mu_{\cdot} + \tau_{2} + \mu_{\cdot} + \tau_{3} = 101.4
+	\]
+	\item But we also know that $\displaystyle \sum_{i}\tau_{i} = 0$, so:
+	\[
+		\mu_{\cdot} + \tau_{1} + \mu_{\cdot} + \tau_{2} + \mu_{\cdot} + \tau_{3} = 3\mu_{\cdot}
+	\]
+	\item Combining the two results, we find:
+	\[
+		3\mu_{\cdot} = 101.4 \Rightarrow  
+		\tikz[baseline]{
+            \node[fill=green!40,ellipse,anchor=base] (t1)
+            {$ \mu_{\cdot} = 33.8$};
+        }
+	\]
+	\item Finally, $\tau_{1} = 6.0174$, $\tau_{2} = 0.942$, and $\tau_{3} = -6.9594$
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (10)}
+\begin{itemize}
+	\item The adequacy of the fitted model can be assessed first visually using some residual plots
+	\item The first plot contains the values of residuals aligned to each corresponding treatment
+	\item Code to reproduce the plot:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	ancova1.df <- data.frame(Fitted = fitted(ancova1), Residuals = resid(ancova1), Treatment = treatment)
+	ggplot(ancova1.df, aes(x = Residuals, y = Treatment,color=treatment)) + 
+	  geom_point(size = 6) + 
+	  theme_minimal()
+	\end{lstlisting}
+	\item It can be easily seen that the ranges of the three groups of residuals are similar which does not suggest unequal variances
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (11)}
+\centerline{\includegraphics[scale=0.45]{./data/fig4}}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (12)}
+\begin{itemize}
+	\item The second plot is a normal q-q plot
+	\begin{lstlisting}[style = rstyle, breaklines]
+	ggplot(data = ancova1.df, aes(sample = Residuals)) + 
+	  stat_qq_line(size = 1.2, color = "darkgreen") +
+	  stat_qq(size=6,color="red", alpha = 0.5) + 
+	  theme_minimal()	
+	\end{lstlisting}
+	\item It compares the actual values with the theoretical values of the normal distribution
+	\item If the actual values seem to lie on the 45\degree -line, then the empirical distribution is approximately normal
+	\item In the current case there is some visual evidence on non-normality
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (13)}
+\centerline{\includegraphics[scale=0.45]{./data/fig5}}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (14)}
+\begin{itemize}
+	\item However, applying a formal test such as the Jarque-Bera one, does not lead to the rejection of the normality hypothesis
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	library(moments)
+	jarque.test(ancova1.df$Residuals)
+	\end{lstlisting}
+	\item Then, overall, we can say that the model is appropriate 
+	\item Now, we proceed to testing the significance of treatment effects
+	\item The null hypothesis is:
+	\[
+		H_{0}:\, \tau_{1} = \tau_{2} = 0
+	\]
+	\item This automatically implies that $\tau_{3} = 0$ (\textcolor{red}{Why?})
+	\item The alternative is that at least one of the $\tau$'s is not equal to zero
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (15)}
+\begin{itemize}
+	\item To make the inference, first run the restricted model:
+	\[
+		Y_{ij} = \mu_{\cdot} + \gamma x_{ij} + \varepsilon_{ij}
+	\]
+	\item Run the restricted model in R, then perform ANOVA on it:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	ancova1r <- lm(Y ~ xcov)
+	anova(ancova1r)		
+	\end{lstlisting}
+	\item The sum of squares of the residuals is 455.72
+	\item Performing ANOVA on the unrestricted model:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	anova(ancova1)
+	\end{lstlisting}
+	yields a value for the sum of squares of the residuals equal to 38.57
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (16)}
+\begin{itemize}
+	\item We will use the following statistic to test significance:
+	\[
+		F = \frac{SSE(R) - SSE(U)}{SSE(U)}/\frac{df_{R} - df_{U}}{df_{U}}
+	\]
+	where $SSE$ denotes sum of squares of errors, $df$ denotes degrees of freedom, and $R$ and $U$ stand respectively for `restricted' and `unrestricted'
+	\item This statistic follows an $F$ distribution when $H_{0}$ holds
+	\item In the current example:
+	\[
+		F = \frac{455.75 - 38.57}{38.57}/\frac{13 - 11}{11} = 59.5
+	\]
+	\item At the 5\% significance level this exceeds the critical value, so we have a significant result
+	\item This leads to the rejection of the null
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (17)}
+\begin{itemize}
+	\item The \textbf{mean treatment effects} are easy to estimate knowing the values of the $\tau$'s; they are as follows:
+	\[
+		\begin{array}{lcr}
+			\tau_{1} - \tau_{2} = 6.0174 - 0.9420 & = & 5.0754\\
+			\tau_{1} - \tau_{3} = 6.0174 + 6.9594 & = & 12.9768\\
+			\tau_{2} - \tau_{3} = 0.9420 + 6.9594 & = & 7.9014
+			
+		\end{array}
+	\]
+	\item Note that the first two figures are just the negatives of the second and the third regression coefficients 
+	\item Print the variance-covariance matrix of the ANCOVA regression:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	vcov(ancova1)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (18)}
+\begin{itemize}
+	\item From it (and using the regression output) we can directly see that:
+	\[
+		\begin{array}{lcl}
+			\mathsf{Var}(\tau_{1} - \tau_{2}) & = & 1.5104\\
+			\mathsf{Var}(\tau_{1} - \tau_{3}) & = & 1.4535
+		\end{array}
+	\]
+	\item We have to only find $\mathsf{Var}(\tau_{2} - \tau_{3})$
+	\item Noting that:
+	\[
+		(\tau_{1} - \tau_{3}) - (\tau_{1} - \tau_{2}) = \tau_{2} - \tau_{3},
+	\]
+	we easily see that:
+	\[
+		\begin{array}{lcl}
+			\mathsf{Var}(\tau_{2} - \tau_{3}) & = & \mathsf{Var}[(\tau_{1} - \tau_{3}) - (\tau_{1} - \tau_{2})] = \\
+			& = & \mathsf{Var}(\tau_{1} - \tau_{3}) + \mathsf{Var}(\tau_{1} - \tau_{2}) - 2\mathsf{cov}(\tau_{1} - \tau_{3},\tau_{1} - \tau_{2})
+		\end{array}
+	\]
+	\item The covariance is also available from R, so:
+	\[
+		\mathsf{Var}(\tau_{2} - \tau_{3}) = 1.4131
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (19)}
+\begin{itemize}
+	\item Using means and variances, we can construct a family of confidence intervals to make a multiple comparison of effects
+	\item This is done using Scheff\'{e}'s approach:
+	\[
+		\textsf{E(effect)} - S\sqrt{\textsf{Var(effect)}} \leq \textsf{E(effect)} \leq \textsf{E(effect)} + S\sqrt{\textsf{Var(effect)}},
+	\]
+	
+	where $S^{2} = (r-1)F(1-\alpha;r-1,n-r-1)$.
+	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (20)}
+\begin{itemize}
+	\item As a hint, note that in the current case, with $\alpha = 0.05$:
+	\[
+		S^{2} = (3-1)F(0.95;3-1,15-3-1) = 2F(0.95;2,11)
+	\]
+	\item You can use R again to find the $F$-value:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+		qf(0.95,2,11)
+	\end{lstlisting}
+	\item \textcolor{red}{The remaining calculations are left as an exercise (straightforward)}
+	\item What the results show is that Treatment 1 (tasting) is more successful that the other two
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (21)}
+\begin{itemize}
+	\item So far we simply assumed that slopes are parallel
+	\item What if we have to assert it?
+	\item We introduce interaction terms in the model to allow for different slopes per treatment:
+	\[
+		Y_{ij} = \mu_{\cdot} + \tau_{1}I_{ij1} + \tau_{2}I_{ij2} + \gamma x_{ij} + \beta_{1}I_{ij1}x_{ij} + \beta_{2}I_{ij2}x_{ij} + \varepsilon_{ij}
+	\]
+	\item This can be done in R as follows:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	ancova2 <- lm(Y ~ treatment*xcov)
+	\end{lstlisting}
+	or, \textcolor{red}{alternatively}:
+	\begin{lstlisting}[style = rstyle, breaklines] 
+	ancova2 <- lm(Y ~ treatment + xcov + treatment:xcov)
+	\end{lstlisting}
+
+	\item See estimation output
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Single-factor ANCOVA: An Example in R (22)}
+\begin{itemize}
+	\item You can easily see from the output that the interaction terms are not statistically significant
+	\item \textcolor{red}{As an exercise, plot the data and add regression lines \underline{assuming} that the interaction terms are statistically significant}
+\end{itemize}
+\end{frame}
+
+\section{Two-Factor ANCOVA}
+\begin{frame}[fragile]
+\frametitle{Two-Factor ANCOVA}
+\begin{itemize}
+	\item We will just briefly sketch it
+	\item Start from the fixed-effects ANOVA model with two factors and balanced data:
+	\[
+		Y_{ijk} = \mu_{\cdot\cdot} + \alpha_{i} + \beta_{j} + (\alpha\beta)_{ij} + \varepsilon_{ijk},\, i = 1,\ldots,a,\,j = 1,\ldots,b,\, k = 1,\ldots,n
+	\]
+	where $\alpha_{i}$ is the main effect of factor $A$ at level $i$, $\beta_{j}$ is the main effect of factor $B$ at level $j$, and $\alpha\beta$ is an interaction effect
+	\item With the same notation, the two-factor ANCOVA model is:
+	\[
+		Y_{ijk} = \mu_{\cdot\cdot} + \alpha_{i} + \beta_{j} + (\alpha\beta)_{ij} + \gamma(X_{ijk} - \overline{X}_{\cdot\cdot\cdot})  + \varepsilon_{ijk}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Two-Factor ANCOVA (2)}
+\begin{itemize}
+	\item From this point onwards, analogical considerations are applied
+	\item In R, adding a factor variable in a regression model is straightforward
+	\item Just do not forget the interaction  term!
+	\item Matters get a little bit more complicated in unbalanced datasets but we leave that and other complications to your curiosity
+\end{itemize}
+\end{frame}
+
+\section{References}
+\begin{frame}[fragile]
+\frametitle{References}
+\begin{itemize}
+	\item Kutner, Nachtsheim, and Neter (2005): \emph{Applied Linear Statistical Models}, McGraw-Hill, 5th edn.
+	\item Cochran (1957): Analysis of Covariance: Its Nature and Uses, \emph{Biometrics}, Vol. 13, No. 3, Special Issue on the Analysis of Covariance (Sep., 1957), pp. 261-281
+	\item Huitema (2011): \emph{The Analysis of Covariance and Alternatives: Statistical Methods for Experiments, Quasi-Experiments, and Single-Case Studies}, Wiley, 2nd edn.
+\end{itemize}
+\end{frame}
+
+\end{document}
+
+R: Cohen, Gardener, Verzani, MacFarland, Kabacoff, Dalgaard
+ANCOVA: Huitema, Kutner

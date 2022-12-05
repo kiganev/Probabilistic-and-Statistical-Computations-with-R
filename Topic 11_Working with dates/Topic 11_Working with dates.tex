@@ -1,0 +1,467 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+%\usepackage{gensymb}
+%\usepackage{verbatim}
+\usepackage{mathrsfs}  
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{\mathsf{E}}
+\DeclareMathOperator{\var}{\mathsf{Var}}
+\DeclareMathOperator{\cov}{\mathsf{Cov}}
+\DeclareMathOperator{\corr}{\mathsf{Corr}}
+\DeclareMathOperator{\plim}{plim}
+\DeclareMathOperator{\rank}{rank}
+
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+\lstdefinestyle{rstyle}%
+{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\color{blue},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstset{language=R,frame=single}    
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty
+
+\title{R403: The R Language for Statistical Computing}
+\subtitle{Topic 11: \textcolor{myred}{Working with dates}}
+\author{Kaloyan Ganev}
+
+\date{2022/2023} 
+
+\begin{document}
+\maketitle
+
+\begin{frame}[fragile]
+\frametitle{Lecture Contents}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}[fragile]
+\frametitle{Introductory notes}
+\begin{itemize}
+	\item As in regular spreadsheet software, date information should be formatted in a specific way so that it is recognized as such
+	\item R can handle dates and times in several ways
+	\item We will discuss each one in turns
+	\item Why do we need to know this?
+	\item Answer: Time series analysis + the need to use different date and time formats and convert one to another
+\end{itemize}
+\end{frame}
+
+\section{The \texttt{Date} class}
+\begin{frame}[fragile]
+\frametitle{The \texttt{Date} class}
+\begin{itemize}
+	\item This is R's simplest class for handling dates (but not times)
+	\item Date information is stored in R as integers
+	\item More specifically, ``day zero'' is Jan 1, 1970
+	\item Every next date corresponds to the count of days from day zero
+	\item Dates before date zero correspond to negative counts
+	\item Uses the Gregorian calendar, so dates earlier than 1752 should be worked with very cautiously
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \texttt{Date} class (2)}
+\begin{itemize}
+	\item To get the current date, use:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	Sys.Date()
+	\end{lstlisting}
+	\item (The output can be converted to a different format if necessary; more on that later)
+	\item See that date information is formatted as follows: \texttt{yyyy-mm-dd}
+	\item So, if you need to store date information in the built-in Date class, just write:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	datevar1 <- as.Date("2016-10-08")
+	\end{lstlisting}
+	\item It is also directly acceptable to use slashes, i.e.: \texttt{yyyy/mm/dd}
+	\begin{lstlisting}[style = rstyle, breaklines]
+	datevar2 <- as.Date("2016/10/08")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \texttt{Date} class (3)}
+\begin{itemize}
+	\item If you work with data that comes with dates formatted differently, you could use it by specifying a format string 
+	\item Format strings are composed of elements shown in the table below
+	\bigskip	
+	\begin{center}
+	\begin{tabular}{cl}
+	\toprule
+	Code & Value\\
+	\midrule
+	\texttt{\%d} & Day of the month (decimal number)\\
+	\texttt{\%m} & Month (decimal number)\\
+	\texttt{\%b} & Month (abbreviated) \textcolor{red}{in the current locale}\\
+	\texttt{\%B} & Month (full name) \textcolor{red}{in the current locale}\\
+	\texttt{\%y} & Year (2 digit)\\
+	\texttt{\%Y} & Year (4 digit)\\
+	\bottomrule
+	\end{tabular}
+	\end{center}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \texttt{Date} class (4)}
+\begin{itemize}
+	\item Examples:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	Sys.getlocale()
+	Sys.setlocale(category = "LC_ALL", locale = "English_United States.1252")
+	as.Date("07/31/2016", format = "%m/%d/%Y")
+	as.Date("December 26, 2011", format = "%B %d, %Y")
+	as.Date("26MAR2011", format = "%d%b%Y")
+	\end{lstlisting}
+	\item If you import date data from MS Excel, note that it uses a different time origin (day zero is Dec 30, 1899)
+	\item You can tell this to R, for example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	as.Date(42651, origin = "1899-12-30")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \texttt{Date} class (5)}
+\begin{itemize}
+	\item To see which number corresponds to a date:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	as.numeric(datevar1)
+	\end{lstlisting}
+	\item You can also calculate differences, e.g. to find out how many days have passed since your birthday:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	Sys.Date() - as.Date("1991-11-29")
+	difftime(Sys.Date(), as.Date("1991-11-29"), units = "weeks") # could be "auto", "secs", "mins", "hours", "days", "weeks"
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Time Sequences with the Date Class}
+\begin{itemize}
+	\item Created using the \cc{seq()} function
+	
+	\textcolor{blue}{Example:} create a sequence of 20 dates starting from Oct 10, 2016:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	tseq1 <- seq(as.Date("2016-10-10"), by = "days", length = 20)
+	\end{lstlisting}
+	
+	\item It is also possible to do the following:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	tseq2 <- seq(from = as.Date("2016-10-10"), to = as.Date("2017-10-10"), by = "3 weeks")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\section{The chron package}
+\begin{frame}[fragile]
+\frametitle{The \textbf{chron} package}
+\begin{itemize}
+	\item Should be installed additionally
+	\item Allows working with times in addition to dates
+	\item Cannot handle time zones and daylight savings time (yet)
+	\item Simple examples
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(chron)
+	dates1 <- dates(c("03/21/2002", "04/26/12", "01/11/14", "01/28/1915", "02/10/2016"))
+	dates1[5] - dates1[4]
+	times1 <- times(c("20:05:21", "19:29:59", "11:13:31", "10:29:14", "06:48:02"))
+	datestimes1 <- chron(dates = dates1, times = times1)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{chron} package (2)}
+\begin{itemize}
+	\item You can also add or subtract numbers
+	\begin{lstlisting}[style = rstyle, breaklines]
+	datestimes1[2] + 3.5
+	\end{lstlisting}
+	\item \cc{range()}, \cc{diff()}, etc. are also possible to use
+	\item As always, further details on additional functions can be found in the documentation
+\end{itemize}
+\end{frame}
+
+\section{POSIX classes}
+\begin{frame}[fragile]
+\frametitle{POSIX classes}
+\begin{itemize}
+	\item What is POSIX? See \url{https://en.wikipedia.org/wiki/POSIX}
+	\item In addition to all above, POSIX classes allow handling time zones
+	\item In R there are two standard POSIX date-time classes: \texttt{POSIXct} and \texttt{POSIXlt}
+	\item \texttt{POSIXct} (\texttt{ct} stands for ``calendar time''): date and time values are stored as the number of seconds since the origin (Jan 1, 1970)
+	\item \texttt{POSIXlt} (\texttt{ct} stands for ``local time''): date and time values are stored as a list; separate elements are used to store seconds, minutes, hours, etc. 
+	\item the POSIXct class is usually preferred
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{POSIX classes (2)}
+\begin{itemize}
+\item To get the current date and time in POSIXct form:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	Sys.time()
+	\end{lstlisting}
+	\item Input format: 
+	\begin{itemize}
+		\item Dates are specified by first writing the year, then the month, and finally the day; the three elements are separated by dashes or slashes:
+		\begin{lstlisting}[style = rstyle, breaklines]
+		pos1 <- "2016-10-15"
+		pos2 <- "2016/10/16"
+		posdate1 <- as.POSIXct(pos1)
+		posdate2 <- as.POSIXct(pos2)
+		c(posdate1,posdate2)
+		\end{lstlisting} 
+		\item If you need to have also times, they are separated from date by a space and then hours, minutes, and seconds are entered separated by a colon:
+		\begin{lstlisting}[style = rstyle, breaklines]
+		pos3 <- "2016-10-15 15:45:37"
+		posdate <- as.POSIXct(pos3)
+		\end{lstlisting}
+	\end{itemize}	
+\end{itemize} 
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{POSIX classes (3)}
+\begin{itemize}
+	\item An example with using market tick data (high-frequency financial data):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	tick_data <- read.csv("tick_data.csv", stringsAsFactors = FALSE)
+	tick_data$DATE <- as.Date(tick_data$DATE, format = "%m/%d/%Y")
+	tick_data$datetime <- paste(tick_data$DATE, tick_data$TIME, sep = " ")
+	tick_data$datetime <- as.POSIXct(tick_data$datetime)
+	tick_data <- subset(tick_data, select = c(5,3:4))
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{POSIX classes (4)}
+\begin{itemize}
+	\item As in the built-in \texttt{Date} class, it is possible to specify the format of the date
+	\item Also, there is a command option that allows to explicitly specify the time zone
+	\item Example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	date0 <- as.POSIXct("10-10-2016", format = "%d-%m-%Y", tz = "EST")
+	\end{lstlisting}
+	\item When you print the result, see that the time zone is displayed as \texttt{EEST} (meaning Easter European Summer Time)
+	\item This means that R automatically takes care of daylight saving time; compare with a December date:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	date0 <- as.POSIXct("10-12-2016", format = "%d-%m-%Y", tz = "EST")
+	\end{lstlisting}
+	\item List of time zone abbreviations: \url{https://en.wikipedia.org/wiki/List_of_time_zone_abbreviations}
+\end{itemize}
+\end{frame}
+
+\section{The \texttt{lubridate} package}
+\begin{frame}[fragile]
+\frametitle{The \textbf{lubridate} package}
+\begin{itemize}
+	\item Install it so that you can use it
+	\item Provides greater ease of working with \texttt{POSIXt}, \texttt{Date} and \textbf{chron} objects
+	\item Provides compatibility with many time-series objects specific to popular packages such as \textbf{zoo}, \textbf{xts}, \textbf{tSeries}, \textbf{fts}, etc.
+	\item Documentation spans lots of pages
+	\item Strings are read into R as POSIXct date-time objects
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{lubridate} package (2)}
+\begin{itemize}
+	\item Reading is implemented through a series of functions listed in the following table:
+	\bigskip
+	
+	\begin{tabular}{ll}
+	\toprule
+	Function & Order of elements\\
+	\midrule
+	\texttt{ymd()} & Year, month, day\\
+	\texttt{ydm()} & Year, day, month\\
+	\texttt{mdy()} & Month, day, year\\
+	\texttt{dmy()} & Day, month, year\\
+	\texttt{hm()} & Hour, minute\\
+	\texttt{hms()} & Hour, minute, second\\
+	\texttt{ymd\_hms()}\footnote{And permutations of \texttt{ymd}.} & Year, month, day, hour, minute, second\\
+	\bottomrule
+	\end{tabular}
+	\item Example of usage:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	datetime0 <- dmy_hms("15-09-2016 13:45:01")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{lubridate} package (3)}
+\begin{itemize}
+	\item To set the time zone, two options are available
+	\item First, let's get current time; with \textbf{lubridate} this is as easy as:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	nowtime <- now()
+	\end{lstlisting}
+	\item If you want to change the way the time instant contained in \texttt{nowtime} is displayed (i.e. what was the time of that instant in a different time zone, say UTC\footnote{Universal Time Zone; same time as GMT.}):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	with_tz(nowtime, tzone = "UTC")
+	\end{lstlisting}
+	\item If you want to change the actual instant of time contained in
+\texttt{nowtime} but keep the displayed clock time:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	force_tz(nowtime, tzone = "UTC")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{lubridate} package (4)}
+\begin{itemize}
+	\item To extract the numerical value of the month, day, etc. in \texttt{nowtime}:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	month(nowtime)
+	day(nowtime)
+	hour(nowtime)
+	\end{lstlisting}
+	\item To extract respectively the abbreviated and full name:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	month(nowtime, label = TRUE)
+	month(nowtime, label = TRUE, abbr = FALSE)
+	\end{lstlisting}
+	\item The same stuff can be done for weekdays with the \cc{wday()} command
+	\begin{lstlisting}[style = rstyle, breaklines]
+	wday(nowtime, label = TRUE)
+	wday(nowtime, label = TRUE, abbr = FALSE)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{lubridate} package (5)}
+\begin{itemize}
+	\item Time intervals can also be created, withing the \texttt{interval} class
+	\begin{lstlisting}[style = rstyle, breaklines]
+	yesttime <- nowtime - days(1)
+	int1 <- interval(nowtime, yesttime)
+	\end{lstlisting}
+	\item Two intervals can be checked for overlapping with \cc{int\_overlap()} (returns a logical value)
+	\item If they overlap, the overlapping period can be calculated with \cc{setdiff()}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{lubridate} package (6)}
+\begin{itemize}
+	\item It is easy to do a lot of arithmetic with \textbf{lubridate} objects
+	\item For this purpose, there are the so-called helper functions
+	\item There are two types of helper functions, respectively for creating two classes of time spans: periods and durations
+	\item The functions for creating periods are named after the plurals of time units, e.g.:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	years(1) + hours(2) + minutes(15) # integer values only allowed
+	\end{lstlisting}
+	\item The functions for creating durations just add a ``d'' in front:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dyears(1) # exactly 365 days
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{lubridate} package (7)}
+\begin{itemize}
+	\item Are two classes really needed?
+	\item Check out and compare the results of these:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dmy(31012016) + years(1)
+	dmy(31012016) + dyears(1)
+	\end{lstlisting}
+	\item Why we get a difference? 2016 is a leap year!
+	\item \textcolor{red}{Note: \textbf{lubridate} is vectorized so it can be applied to vectors too; also it is possible to use it within functions}
+\end{itemize}
+\end{frame}
+
+\end{document}
+
+
+
+Spector
+p. 20: MLE
+p. 30: Combinatorics
+
+http://www.burns-stat.com/r-database-interfaces/

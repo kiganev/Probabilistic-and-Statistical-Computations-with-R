@@ -1,0 +1,967 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+%\usepackage{gensymb}
+%\usepackage{verbatim}
+\usepackage{mathrsfs}  
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{\mathsf{E}}
+\DeclareMathOperator{\var}{\mathsf{Var}}
+\DeclareMathOperator{\cov}{\mathsf{Cov}}
+\DeclareMathOperator{\corr}{\mathsf{Corr}}
+\DeclareMathOperator{\plim}{plim}
+\DeclareMathOperator{\rank}{rank}
+
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+\lstdefinestyle{rstyle}%
+{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\color{blue},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstset{language=R,frame=single}    
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty
+
+
+\title{R403: Probabilistic and Statistical Computations\\ with R}
+\subtitle{Topic 09: \textcolor{myred}{Control Structures}}
+\author{Kaloyan Ganev}
+
+\date{2022/2023} 
+
+\begin{document}
+\maketitle
+
+\begin{frame}[fragile]
+\frametitle{Lecture Contents}
+\tableofcontents
+\end{frame}
+ 
+\section{Introduction}
+\begin{frame}[fragile]
+\frametitle{Introductory notes}
+\begin{itemize}
+	\item Control structures allow controlling the programme flow
+	\item In simpler language, they stir program execution in one direction or another depending on whether a condition is fulfilled or not
+	\item The simplest control structures are if-else statements
+	\item They check whether a condition is true and execute a piece of code or another
+	\item Loops are similar in the following respect: they operate also as long as a condition is met
+	\item Still, there is a major difference: in if-else statements code is executed only once; in loops it may be executed many times
+\end{itemize}
+\end{frame}
+
+\section{If-else statements}
+\begin{frame}[fragile]
+\frametitle{If-else statements}
+\begin{itemize}
+	\item The if-else control structure is among the simplest in the R language
+	\item It is very similar to the analogical structures that other program languages (such as C++, Python, Java, etc.) have
+	\item What is does is to check whether a condition is logically true and then execute a code block
+	\item In its simplest form, it does not contain an \cc{else} clause
+	\item If the condition is true, then the code is executed; otherwise, nothing is done, and R proceeds with the rest of your script (if any)
+	\item Let's take an example
+\end{itemize} 
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{If-else statements (2)}
+\begin{itemize}
+	\item Generate a random number $x$ by drawing from the standard normal distribution:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	x <- rnorm(1)
+	\end{lstlisting}
+	\item The simple control statement will be:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	if (x <= 0){
+		y <- 10
+	}
+	\end{lstlisting}
+	\item Interpreted as follows: if $x$ turns out to be non-positive (TRUE condition), then generate $y$ and assign the number 10 to it
+	\item If this condition is FALSE, nothing happens
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{If-else statements (3)}
+\tikzstyle{decision} = [diamond, draw, fill=yellow!60, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=orange!40, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=green!20, node distance=2cm,
+    minimum height=2em]
+
+\begin{center}
+\begin{tikzpicture}[node distance = 2cm, auto]
+    % Place nodes
+	\node [decision] (decide) {Test expression};
+    \node [block, below of = decide, node distance=3cm] (codeif) {Code block};
+    \node [cloud, below of = codeif] (cont) {Continue};
+    % Draw edges
+    \path [line] node{} + (0,2) -- (decide);
+    \path [line] (decide) -- (codeif);
+    \path [line] (decide.east) -- node[right]{}  + (1,0) |- (cont.east);     
+    \path [line] (codeif) -- (cont);
+    \node[] at (0.5,-1.5) {TRUE};
+    \node[] at (2.8,-1.5) {FALSE};
+\end{tikzpicture}
+\end{center} 
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{If-else statements (4)}
+\begin{itemize}
+	\item Now let's make our R script do something also in the case when the condition is FALSE
+	\item We just add the \texttt{else} clause
+	\item In our example, if the condition is not met, we assign the value of 20 to y:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	if (x <= 0){
+		y <- 10
+		} else {
+		y <- 20
+		}
+	\end{lstlisting}
+	\item Note that \cc{else} should be in the same line as the closing curly bracket of \cc{if}, otherwise R will produce an error
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{If-else statements (5)}
+\tikzstyle{decision} = [diamond, draw, fill=yellow!60, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=orange!40, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=green!20, node distance=2cm,
+    minimum height=2em]
+
+\begin{center}
+\begin{tikzpicture}[node distance = 2cm, auto]
+    % Place nodes
+	\node [decision] (decide) {Test expression};    
+    \node [block, below of = decide, node distance=3cm] (codeif) {Code block 1};
+    \node [block, right of = codeif, node distance=3cm] (codeelse) {Code block 2};
+    \node [cloud, below of = codeif] (cont) {Continue};
+    % Draw edges
+    \path [line] node{} + (0,2) -- (decide);
+    \path [line] (decide) -- (codeif);
+    \path [line] (decide) -| (codeelse);
+    \path [line] (codeif) -- (cont);
+    \path [line] (codeelse) |- (cont);
+    \node[] at (0.5,-1.5) {TRUE};
+    \node[] at (3.6,-1.5) {FALSE};
+\end{tikzpicture}
+\end{center} 
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{If-else statements (6)}
+\begin{itemize}
+	\item If-else statements can be nested
+	\item This means that the first check on a condition might lead to another condition to be checked (this can be done many times, actually)
+	\item We will take again an example
+	\item Let us make an additional check if the condition $x \leq 0$ is FALSE, this time whether $0 < x \leq 3$
+	\item If the latter is TRUE, we assign 15 to $y$, otherwise we assign 20 to $y$:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	if (x <= 0){
+		y <- 10
+		} else if (x > 0 && x <=3){
+			y <- 15
+			} else {
+				y <- 20
+			}
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{If-else statements (5)}
+\tikzstyle{decision} = [diamond, draw, fill=yellow!60, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=orange!40, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=green!20, node distance=2cm,
+    minimum height=2em]
+
+\begin{center}
+\begin{tikzpicture}[node distance = 2cm, auto]
+    % Place nodes
+	\node [decision] (decide) {Test expression 1};
+	\node [decision, right of = decide, node distance = 4cm] (decide2) {Test expression 2};
+    \node [block, below of = decide, node distance=3cm] (codeif) {Code block 1};
+    \node [block, below of = decide2, node distance=3cm] (codeelseif) {Code block 2};
+    \node [block, right of = codeelseif, node distance=3cm] (codeelse) {Code block 3};
+    \node [cloud, below of = codeelseif] (cont) {Continue};
+    % Draw edges
+    \path [line] node{} + (0,2) -- (decide);
+    \path [line] (decide) -- (decide2);
+    \path [line] (decide) -- (codeif);    
+    \path [line] (decide2) -- (codeelseif);    
+    \path [line] (decide2) -| (codeelse);
+    \path [line] (codeif) |- (cont);
+    \path [line] (codeelseif) -- (cont);
+    \path [line] (codeelse) |- (cont);
+    \node[] at (0.5,-1.5) {TRUE};
+    \node[] at (2,0.3) {FALSE};
+    \node[] at (4.5,-1.5) {TRUE};
+    \node[] at (6,0.3) {FALSE};
+\end{tikzpicture}
+\end{center} 
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Logical operations}
+\begin{itemize}
+	\item We introduced one already (logical AND), or at least a form of it
+	\item Now, let's get through all of them, one by one
+	\item Logical negation (NOT): implemented through `!'; example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	if (!(x > 10)){
+		z <- 300
+		}
+	\end{lstlisting}
+	\item Logical OR: `$||$' or `$|$'
+	\item Logical AND: `\&\&' or `\&'
+	\item The longer versions of the above start from the left-most elements of the compared objects and proceed until the result is determined; the shorter versions make the comparison for each element (i.e. comparison is element-wise)
+	\item Therefore, the longer versions are usually preferred as they might take less time
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Logical operations (2)}
+\begin{itemize}
+	\item Logical XOR: \cc{xor(x,y)}
+	\item Interpreted as `exclusive OR', results in TRUE only when $x$ and $y$ differ
+	\item Best illustrated by means of the following truth table:
+	\renewcommand{\arraystretch}{1.4}
+	\begin{center}
+		\begin{tabular}{ccc}
+			\hline
+			$x$ & $y$ & $xor(x,y)$\\
+			\hline
+			FALSE & FALSE & FALSE\\
+			FALSE & TRUE & TRUE \\
+			TRUE & FALSE & TRUE \\
+			TRUE & TRUE & FALSE\\
+			\hline
+		\end{tabular}
+	\end{center}
+	\item \cc{isTRUE(x)}: if $x$ is a single-value logical variable, the command checks whether $x$ is identical to TRUE
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Vectorized \cc{if} operations}
+\begin{itemize}
+	\item The common \cc{if-else} structure is designed to operate on just one logical value at a time
+	\item What if it is necessary to perform programme flow control on vectors of logical values?
+	\item There comes the R command \cc{ifelse}
+	\item Syntax:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	ifelse(test, value_for_TRUE_elements, value_for_FALSE_elements)
+	\end{lstlisting}
+	\item In the above, \cc{test} is a logical vector, the remaining two are self-explanatory (only note they have the same length as \cc{test})
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Vectorized \cc{if} operations (2)}
+\begin{itemize}
+	\item Let's look at an example: simulate 10000 tosses of a coin and record the outcomes as ``Heads'' and ``Tails''
+	\begin{lstlisting}[style = rstyle, breaklines]
+	coin_toss <- ifelse(rbinom(10000, 1, 0.5), "Head", "Tail")
+	\end{lstlisting}
+	\item Explanation: we perform here 10000 Bernoulli trials with a fair coin (equal probabilities of heads and tails)
+	\item The example shows that in addition to logical vectors, vectors of values coercible to logical values are also admissible as arguments to the function
+\end{itemize}
+\end{frame}
+
+\section{Loops}
+\begin{frame}[fragile]
+\frametitle{\cc{for} loops}
+\begin{itemize}
+	\item Loops are about repeating a certain operation (set of operations) many times
+	\item The \cc{for} loop is designed to perform \textbf{a fixed number of iterations}
+	\item It is maybe the most used loop type in R, and in most cases it is sufficient to perform the necessary task
+	\item Usually, \cc{for} loops are used to iterate through the items of an array (matrix, vector) or a list
+	\item Index variables are used in order to go over the respective elements
+	\item Index values are integers contained in a vector
+	\item This leads to the following generalization of syntax concerning \cc{for} loops:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	for (i in <vector>){
+		operation1
+		operation2
+		...
+		}
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\cc{for} loops (2)}
+\tikzstyle{decision} = [diamond, draw, fill=yellow!60, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=orange!40, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=green!20, node distance=2cm,
+    minimum height=2em]
+
+\begin{center}
+\begin{tikzpicture}[node distance = 2cm, auto]
+    % Place nodes
+	\node [decision] (decide) {Index is in specified range?};
+	\node [block, below of = decide, node distance=3cm] (codeif) {Code block};
+    \node [cloud, below of = codeif] (cont) {Continue};
+    % Draw edges
+    \path [line] node{} + (0,2) -- (decide);
+    \path [line] (decide) -- (codeif);
+    \path [line] (decide.east) -- node[right]{}  + (1,0) |- (cont.east); 
+    \path [line] (codeif.west) -- node[left]{}  + (-1,0) |- (decide.west); 
+    \node[] at (0.5,-1.8) {TRUE};
+    \node[] at (1.8,0.3) {FALSE};
+    \node[] at (1.5,1.7) {Start of \cc{for} loop};
+    \node[] at (-3.6,-1.8) {Move to next index};
+\end{tikzpicture}
+\end{center} 
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Examples of \cc{for} loops}
+\begin{itemize}
+	\item Example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	x <- c(1,3,5,7,9,11)
+	for (i in x){
+		print(i%%3)
+		}
+	\end{lstlisting}
+	\item Another example: join capital letters and corresponding indices:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	vec1 <- character(length(LETTERS))
+	for (i in 1:length(LETTERS)){
+		vec1[i] <- paste(LETTERS[i],i, sep = "")
+		}
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Nested \cc{for} loops}
+\begin{itemize}
+	\item Suitable when it is necessary to iterate over multiple dimensions
+	\item An example: create a 3D array, $5\times 10 \times 15$; each element should equal the product of dimension indices
+	\begin{lstlisting}[style = rstyle, breaklines]
+	array1 <- array(dim = c(5,10,15))
+	for (i in 1:dim(array1)[1]){
+		for (j in 1:dim(array1)[2]){
+			for (k in 1:dim(array1)[3]){
+				array1[i,j,k] <- i*j*k
+				}
+			}
+		}
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\cc{while} loops}
+\begin{itemize}
+	\item Suitable when the number of iterations is not known in advance
+	\item A certain operation is iterated while a condition is TRUE; when it turns to FALSE, the operation is interrupted
+	\item Two extreme possibilities emerge:
+	\begin{enumerate}
+		\item The condition is FALSE at the start of the iteration; then, the code in the body of the loop is not executed at all
+		\item The FALSE condition is never encountered which makes the loop run indefinitely (infinite number of iterations)
+	\end{enumerate}
+	\item Therefore, \cc{while} loops should be used very carefully
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\cc{while} loops (2)}
+\tikzstyle{decision} = [diamond, draw, fill=yellow!60, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=orange!40, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=green!20, node distance=2cm,
+    minimum height=2em]
+
+\begin{center}
+\begin{tikzpicture}[node distance = 2cm, auto]
+    % Place nodes
+	\node [decision] (decide) {Test expression};
+	\node [block, below of = decide, node distance=3cm] (codeif) {Code block};
+    \node [cloud, below of = codeif] (cont) {Continue};
+    % Draw edges
+    \path [line] node{} + (0,2) -- (decide);
+    \path [line] (decide) -- (codeif);
+    \path [line] (decide.east) -- node[right]{}  + (1,0) |- (cont.east); 
+    \path [line] (codeif.west) -- node[left]{}  + (-1,0) |- (decide.west); 
+    \node[] at (0.5,-1.8) {TRUE};
+    \node[] at (1.8,0.3) {FALSE};
+    \node[] at (1.7,1.7) {Start of \cc{while} loop};
+\end{tikzpicture}
+\end{center} 
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Examples of \cc{while} loops}
+\begin{itemize}
+	\item Initialize $x$ to equal 0
+	\item Generate a random number from the standard normal distribution
+	\item Add it to $x$
+	\item Do so as long as $x$ does not exceed 3
+	\begin{lstlisting}[style = rstyle, breaklines]
+	x <- 0
+	while (x <= 3) {
+		z <- rnorm(1)
+		x <- x + z
+		}
+	\end{lstlisting}
+	\item A more practical example: keep asking for a user name until the user supplies it:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	uname <- character()
+	while (length(uname) == 0){
+		cat("Please enter your user name:")
+		uname <- scan(what=character(),nmax=1,quiet=TRUE)
+		}
+	\end{lstlisting}
+\end{itemize} 
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Some clarifications on \cc{cat()} and \cc{scan()}}
+\begin{itemize}
+	\item \cc{cat()}: 
+	\begin{enumerate}
+		\item Prints output to the screen or to a file
+		\item If necessary, coerces to character mode
+		\item Valid only for atomic data types (logical, integer, numeric,  complex, character) and for names
+	\end{enumerate}
+	\item \cc{scan()}:
+	\begin{enumerate}
+		\item Reads data into a vector or list from the console or file
+		\item The \cc{what} option defines the data type to be read
+		\item The \cc{nmax} option defines the maximum number of values to be read
+		\item The \cc{quiet} option, if FALSE, makes \cc{scan()} print a message saying how many items have been read
+	\end{enumerate}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\cc{break} statements}
+\begin{itemize}
+	\item When encountered in a loop, it makes R exit the loop and proceed with the remaining part of your script (if any)
+	\item This means there are two options: if it is in an inner part of a loop, it is exited and R goes to the outer loop; if the loop is not nested, R goes to the code that follows after the loop
+	\item Example: Find the largest integer that divides another integer with no remainder:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	int1 <- 10000
+	int2 <- int1
+	div_by <- 2437
+	while (int1 > 0)  {
+		if (int1%%div_by == 0)  {
+			print(paste("The largest integer between 0 and", int2, "divisible by", div_by, "is ", int1, "."))
+		break
+		}
+	int1 = int1 - 1
+	}
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\cc{break} statements (2)}
+\tikzstyle{decision} = [diamond, draw, fill=yellow!60, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=orange!40, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=green!20, node distance=2cm,
+    minimum height=2em]
+
+\begin{center}
+\resizebox{5.5cm}{!}{%
+\begin{tikzpicture}[node distance = 2cm, auto]
+    % Place nodes
+	\node [decision] (decide) {Test expression};
+	\node [decision, below of = decide, node distance=3cm] (break) {Break?};
+	\node [block, below of = break, node distance=2.5cm] (codeif) {Code block};
+    \node [cloud, right of = codeif, node distance=3cm] (cont) {Continue};
+    % Draw edges
+    \path [line] node{} + (0,2) -- (decide);
+    \path [line] (decide) -- (break);
+    \path [line] (break) -- (codeif);    
+    \path [line] (decide.east) -- node[right]{}  + (1,0) -| (cont.north); 
+    \path [line] (break.east) -- node[right]{}  + (0.5,0) |- (cont.west); 
+    \path [line] (codeif.west) -- node[left]{}  + (-1,0) |- (decide.west); 
+    \node[] at (0.5,-1.5) {TRUE};
+    \node[] at (1.8,0.3) {FALSE};
+    \node[] at (1.2,-2.8) {Yes};
+    \node[] at (0.3,-4.2) {No};    
+\end{tikzpicture}
+}
+\end{center} 
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\cc{next} statements}
+\begin{itemize}
+	\item Useful when the an iteration of a loop has to be skipped without interrupting the loop
+	\item When encountered, it leads to skipping the current iteration and moving to the next one (i.e. it goes to evaluating the condition of the loop and then to execution of the corresponding code)
+	\item Example: Get all odd integers between 1 and 100 in a vector
+	\begin{lstlisting}[style = rstyle, breaklines]
+	int3 <- 0
+	vec_odd <- integer()
+	for (i in c(1:100)){
+		if(i%%2 == 0){
+			next  
+			}
+	vec_odd <- c(vec_odd,i)
+	}
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\cc{next} statements (2)}
+\tikzstyle{decision} = [diamond, draw, fill=yellow!60, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=orange!40, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=green!20, node distance=2cm,
+    minimum height=2em]
+
+\begin{center}
+\resizebox{5.5cm}{!}{%
+\begin{tikzpicture}[node distance = 2cm, auto]
+    % Place nodes
+	\node [decision] (decide) {Test expression};
+	\node [decision, below of = decide, node distance=3cm] (break) {Next?};
+	\node [block, below of = break, node distance=2.5cm] (codeif) {Code block};
+    \node [cloud, right of = codeif, node distance=3cm] (cont) {Continue};
+    % Draw edges
+    \path [line] node{} + (0,2) -- (decide);
+    \path [line] (decide) -- (break);
+    \path [line] (break) -- (codeif);    
+    \path [line] (decide.east) -- node[right]{}  + (1,0) -| (cont.north); 
+    \path [line] (break.west) -- node[left]{}  + (-0.7,0) |- (decide.west); 
+    \path [line] (codeif.west) -- node[left]{}  + (-1,0) |- (decide.west); 
+    \node[] at (0.5,-1.5) {TRUE};
+    \node[] at (1.8,0.3) {FALSE};
+    \node[] at (-1.2,-2.8) {Yes};
+    \node[] at (0.3,-4.2) {No};    
+\end{tikzpicture}
+}
+\end{center} 
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\cc{repeat} loops}
+\begin{itemize}
+	\item Iterates a code block many times
+	\item Practically \textcolor{red}{infinite} loops (Use very cautiously!)
+	\item There is no condition to check in the beginning before the code block is entered
+	\item This means that the \cc{repeat} loop is executed at least once
+	\item The loop needs to be explicitly terminated by a \cc{break} statement
+	\item Example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	uname <- character()
+	repeat{
+		cat("Enter your username:")
+		uname <- scan(what=character(),nmax=1,quiet=TRUE)
+		if(length(uname) != 0){
+			break
+		}
+	}
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\cc{repeat} loops (2)}
+\tikzstyle{decision} = [diamond, draw, fill=yellow!60, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=orange!40, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=green!20, node distance=2cm,
+    minimum height=2em]
+
+\begin{center}
+\resizebox{3.5cm}{!}{%
+\begin{tikzpicture}[node distance = 2cm, auto]
+    % Place nodes
+	\node [block] (code) {Code block};    
+	\node [decision, below of = code, node distance=2.5cm] (break) {Break?};
+    \node [cloud, below of = break, node distance=2.5cm] (cont) {Continue};
+    % Draw edges
+    \path [line] node{} + (0,1.5) -- (code);
+    \path [line] (code) -- (break);
+    \path [line] (break) -- (cont);    
+    \path [line] (break.west) -- node[left]{}  + (-1,0) |- (code.west); 
+    \node[] at (0.5,-4) {Yes};
+    \node[] at (-1.3,-2.2) {No};    
+\end{tikzpicture}
+}
+\end{center} 
+\end{frame}
+
+\section{Loop functions}
+\begin{frame}[fragile]
+\frametitle{The \cc{apply} family of functions}
+\begin{itemize}
+	\item For large and multi-dimensional data objects, loops can be quite tedious and slow
+	\item There are, fortunately, the so-called vectorized functions which perform the loop operations in a much more efficient way
+	\item Thus, resources (time, human, computing) are economized and can be channelled to better alternative uses
+	\item The \cc{apply} family of functions is a widely used set of functions that perform tasks of this kind
+	\item The actual looping is performed by pre-compiled C code which is a lot faster 
+	\item We will look in terms at the \cc{apply()}, \cc{lapply()}, \cc{sapply()}, \cc{mapply()}, \cc{rapply()}, \cc{vapply()} and \cc{tapply()} functions
+	\item Then we will consider several more examples of other useful vectorized functions (\cc{split()} and \cc{sweep()})
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{apply()} function}
+\begin{itemize}
+	\item Operates on arrays (incl. matrices, but not single-dimension vectors)
+	\item General construct:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	apply(x, MARGIN, FUN, ...)
+	\end{lstlisting}
+	where \cc{x} is the name of the respective array, \cc{MARGIN} defines the dimension(s) to which to apply the respective function, and \cc{FUN} is the function to apply; the ``\cc{\ldots}'' stand for possible options that \cc{FUN} might need to use
+	\item Example (on a matrix):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	m1 <- matrix(1:100, nrow = 10)
+	apply(m1, MARGIN = 1, mean)
+	apply(m1, MARGIN = 2, sum)
+	apply(m1, MARGIN = c(1,2), sqrt)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{apply()} function (2)}
+\begin{itemize}
+	\item Returns an object which has the type of its argument (in this respect, it depends on the value of \cc{MARGIN})
+	\item If it receives as an argument an object different from an array, it coerces it to an array if possible
+	\item This function is actually not faster than a regular loop but is much more parsimonious (just one line of code)
+	\item \cc{colSums, rowSums, colMeans,} and \cc{rowMeans} actually can do some of the jobs that \cc{apply()} does but at a significantly greater speed
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{lapply()} function}
+\begin{itemize}
+	\item Works on lists (that's where the `l' in \cc{lapply()} comes from) and returns a list
+	\item If the input object is not a list, if it is possible, it is coerced to a list
+	\item Loops over each element and applies to it a specified function
+	\item Written in C, so it provides much greater speed of execution of tasks
+	\item General construct:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	lapply(x, FUN, ...)
+	\end{lstlisting}
+	where \cc{x} is a list, \cc{FUN} is the function that is applied to the list's elements, and the dots are optional and stand for the  arguments of \cc{FUN} that might be used
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{lapply()} function (2)}
+\begin{itemize}
+	\item Example of usage:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	object1 <- list(arr1 = array(rnorm(1000),dim = c(10,10,10)), vect1 = rnorm(10), mat1 = matrix(rnorm(100), nrow = 10))
+	lapply(object1, sum)
+	\end{lstlisting}
+	\item The output is a list
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{sapply()} function}
+\begin{itemize}
+	\item \cc{sapply()} is a variant of \cc{lapply()} and works similarly to it
+	\item The major difference is that it attempts to simplify the result (this is where the `s' comes from)
+	\item Simplification works in the following alternative ways:
+	\begin{itemize}
+		\item If the input list is of length zero, a zero-length list is also output
+		\item If each element of the input list is of length one, \cc{sapply()} returns a vector 
+		\item If list elements' length is equal but greater than one, it outputs a matrix (2D array)
+		\item In every other instance, a list of the same length as the input list is returned
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{sapply()} function (2)}
+\begin{itemize}
+	\item Example of usage: we will use the same object that we used in the \cc{lapply()} example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	sapply(object1, sum)
+	\end{lstlisting}
+	\item The output is a vector
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{vapply()} function}
+\begin{itemize}
+	\item Also used to simplify output in order to produce an atomic vector
+	\item `v' comes from `verbose', i.e. uses more words in the description of the task
+	\item At the same time, if it encounters an error, it provides more information on it (\cc{sapply()} is actually giving no such information and even you don't know there's been an error)
+	\item Unlike \cc{sapply()} which tries to guess the output type, in \cc{vapply()} output type is explicitly specified by means of an additional argument
+	\item By this, execution speed is higher, and results are much more consistent with expectations (e.g. of data type)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{vapply()} function (2)}
+\begin{itemize}
+	\item General construct:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	vapply(x, FUN, FUN.VALUE, ..., USE.NAMES = TRUE)
+	\end{lstlisting}
+	\item As output type is pre-specified, \cc{vapply()} returns a vector or an array
+	\item If \cc{length(FUN.VALUE) == 1}, a vector having the same length as \cc{x} is returned; else, an array is returned.
+	\item If \cc{FUN.VALUE} is not an array, R outputs a matrix with dimensions \cc{c(length(FUN.VALUE),length(x))}; else it outputs an array a with dimensions \cc{c(dim(FUN.VALUE), length(x))}
+	\item Example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	vapply(-10 + 0i:10 + 0i, sqrt, 1i) # outputs complex numbers
+	vapply(1:10, log, 1) # outputs floating point numbers
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{mapply()} function}
+\begin{itemize}
+	\item As the `m' in the name suggests, \cc{mapply()} is a multivariate version of \cc{lapply()} and \cc{sapply()}
+	\item Multivariate in the sense that it can apply the specified function to multiple inputs (i.e. multiple lists)
+	\item General construct:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	mapply(FUN, ..., MoreArgs = NULL, SIMPLIFY = TRUE, USE.NAMES = TRUE)
+	\end{lstlisting}
+	\item Note that unlike in the previous cases, the function to apply, \cc{FUN}, is written first
+	\item Next follows the list of inputs (the dots)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{mapply()} function (2)}
+\begin{itemize}
+	\item \cc{MoreArgs} relates to the additional arguments of \cc{FUN} that are used (if necessary)
+	\item If \cc{USE.NAMES} equals TRUE and if X is character, the values of \cc{x} are used as names for the output (unless names of the elements of \cc{x} have already been explicitly specified)
+	\item Example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	mapply(rep,5:1,1:5) # Equivalent to mapply(rep,x = 5:1,times = 1:5)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{rapply()} function}
+\begin{itemize}
+	\item `r' comes from `recursive', i.e. \cc{rapply()} is a recursive variant of \cc{lapply()}
+	\item Applies recursively a function to all elements of a list
+	\item General construct:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	rapply(x, FUN, classes = "ANY", deflt = NULL, how = c("unlist", "replace", "list"), ...)
+	\end{lstlisting}
+	\item The input \cc{x} should be a list (or be coercible to a list)
+	\item \cc{FUN} is the function that is applied
+	\item \cc{classes} selects the classes of non-list elements to which to apply \cc{FUN}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{rapply()} function (2)}
+\begin{itemize}
+	\item If either \cc{how = ``list''} or \cc{how = ``unlist''}:\footnote{If \cc{how = ``unlist''}, the resulting list is unlisted by means of the command \cc{unlist()} with the option \cc{recursive = TRUE}.} the input list is copied, all non-list elements are replaced by the result of applying \cc{FUN}; all other elements are replaced by \cc{deflt}
+	\item If \cc{how = ``replace''}: each non-list element is replaced by the result of applying \cc{FUN}; the elements which not match the class definition are directly copied to the new list (in other words, in such a case the \cc{deflt} option is irrelevant)
+	\item Examples:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	rapply(object1, mean)
+	rapply(object1, mean, how = "unlist")
+	rapply(object1, mean, how = "list")
+	object2 <- list(a1 = c(1:100), b1 = c(101:200), char1 <- "Text")
+	rapply(object2, log, classes = "integer", how = "replace")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{tapply()} function}
+\begin{itemize}
+	\item Applies a specified function to a subset of a vector
+	\item General construct:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	tapply(x, INDEX, FUN = NULL, ..., simplify = TRUE)
+	\end{lstlisting}
+	\item Selection of elements is carried out on the basis of the values of \cc{INDEX}
+	\item \cc{INDEX} itself has to be of either factor (i.e. a categorical variable) or logical type and has to have the same length as \cc{x}
+	\item It is possible to use multiple indexes; in such a case, a list of indexes is created
+	\item Attempts to simplify the result if \cc{simplify = TRUE}; else it returns a list
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{tapply()} function (2)}
+\begin{itemize}
+	\item Example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	m1 = matrix(1:9, 3, 3)
+	idx1 = matrix(c(1,2,1,3,2,2,1,2,3), 3, 3)
+	tapply(m1, idx1, sum)
+	\end{lstlisting}
+	\item Now, try to figure this one out:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	x <- 1:100
+	idx2 <- rep(c('A1', 'A2', 'A3'), length = 100)
+	idx3 <- rep(c('B1', 'B2' ,'B3', 'B4'), length = 100)
+	idx4 <- rep(c('C1','C2','C3','C4', 'C5'), length = 100)
+	tapply(x, list(idx2, idx3, idx4), mean, na.rm = TRUE)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{split()} function}
+\begin{itemize}
+	\item Not a loop function itself but used in combination with loop functions
+	\item General construct:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	split(x, f, drop = FALSE, ...)
+	\end{lstlisting}
+	\item Splits the data contained in the vector \cc{x} into the groups defined by the factor variable \cc{f}.
+	\item Example
+	\begin{lstlisting}[style = rstyle, breaklines]
+	for (i in 1:length(y)){
+		if (y[i]%%2 == 0){
+			f1[i] <- "A"
+		} else {
+			f1[i] <- "B"
+			}
+		}
+	lapply(split(x, f1), mean)
+	\end{lstlisting}
+	\item There is also an \cc{unsplit()} command, check it out
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{sweep()} function}
+\begin{itemize}
+	\item Gets an array as an input, returns an array
+	\item The output is obtained by sweeping out a summary statistic
+	\item General construct:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	sweep(x, MARGIN, STATS, FUN = "-", check.margin = TRUE, ...)
+	\end{lstlisting}
+	\item Examples:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	mat1 <- matrix(1:12, nrow = 3)
+	sweep(mat1, 2, colMeans(mat1), "-") # remove column means from elements
+	sweep(mat1, 2, colSums(mat1), "/") # divide each element by the column sum
+
+	arr1 = array(1:18, dim = c(3,3,2))
+	sweep(arr1, 1, apply(X, 1, mean)) # sweeps out the row means from each element
+	sweep(arr2, 2, apply(X, 2, mean)) # sweeps out the column means
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{References}
+\begin{itemize}
+	\item Cotton, R. (2013): \emph{Learning R}, O'Reilly, ch. 8
+	\item Peng, R. (2020): \emph{R Programming for Data Science}, LeanPub, ch. 18
+\end{itemize}
+\end{frame}
+\end{document}
+
+https://www.datacamp.com/community/tutorials/tutorial-on-loops-in-r
+http://www.programiz.com/r-programming/repeat-loop
+https://www.datacamp.com/community/tutorials/r-tutorial-apply-family
+https://docs.tibco.com/pub/enterprise-runtime-for-R/2.5.0/doc/html/base/rapply.html
+http://people.stern.nyu.edu/ylin/r_apply_family.html
+http://mathalope.co.uk/2015/03/09/swirl-r-programming-lesson-11-vapply-and-tapply/
+http://www.ats.ucla.edu/stat/r/library/advanced_function_r.htm#sweep

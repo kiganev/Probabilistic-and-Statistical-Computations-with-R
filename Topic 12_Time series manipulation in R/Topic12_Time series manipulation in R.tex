@@ -1,0 +1,641 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+%\usepackage{gensymb}
+%\usepackage{verbatim}
+\usepackage{mathrsfs}  
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{\mathsf{E}}
+\DeclareMathOperator{\var}{\mathsf{Var}}
+\DeclareMathOperator{\cov}{\mathsf{Cov}}
+\DeclareMathOperator{\corr}{\mathsf{Corr}}
+\DeclareMathOperator{\plim}{plim}
+\DeclareMathOperator{\rank}{rank}
+
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+\lstdefinestyle{rstyle}%
+{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\color{blue},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstset{language=R,frame=single}    
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty 
+
+\title{R403: Probabilistic and Statistical Computations\\ with R}
+\subtitle{Topic 12: \textcolor{myred}{Time Series Manipulation in R}}
+\author{Kaloyan Ganev}
+
+\date{2022/2023} 
+
+\begin{document}
+\maketitle
+
+\begin{frame}[fragile]
+\frametitle{Lecture Contents}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}[fragile]
+\frametitle{What is a time series?}
+\begin{itemize}
+	\item An informal definition:
+	\begin{definition}	
+		A time series is a time-ordered series of data observations on one or more variables.
+	\end{definition}
+	\item Although it is brief, it suggests a lot of insight
+	\item First, each observation belongs to a specified point in time and to no other; time values index the observations
+	\item The number of observations cannot be indefinitely large, therefore we have discrete data
+	\item Usually measurements are taken at equal intervals but there are exceptions to this rule
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{R's capabilities of working with time series}
+\begin{itemize}
+	\item Quite large and extensive
+	\item Some of them shipped with the base version, others available through contributed packages
+	\item We will start with the first type and then we will discuss some of the most frequently use ones of the second type
+	\item Do not forget to pay a visit to the CRAN Task View of packages for a more comprehensive list
+\end{itemize}
+\end{frame}
+
+\section{Base R time series capabilities}
+\begin{frame}[fragile]
+\frametitle{The \textbf{ts} class}
+\begin{itemize}
+	\item Represents regularly spaced time series
+	\item Uses numeric time stamps
+	\item Obtained through the conversion of numeric vectors
+	\item Conversion is achieved by means of the \cc{ts()} command available is the automatically loaded \textbf{stats} package
+	\item General construct:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	ts(x, start=, end=, frequency=)
+	\end{lstlisting}
+	where \cc{x} is the input vector; the others are more or less self explanatory
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{An example of creating time series with \cc{ts()}}
+\begin{itemize}
+	\item We will use the \textbf{eurostat} package to download some data 
+	\item Data are on GDP and its components for all EU Member States
+	\item We choose to work with quarterly frequencies
+	\item Load the package, alongside with \textbf{tidyverse} which will be used for data processing:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(eurostat)
+	library(tidyverse)	
+	\end{lstlisting}
+	
+	\item First, we look for all datasets containing the string ``GDP'':
+
+	\begin{lstlisting}[style = rstyle, breaklines]
+	search1 <- search_eurostat("GDP", type = "dataset")
+	\end{lstlisting}
+	
+	\item Then we download data on quarterly GDP and its components
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	data_gdpq <- get_eurostat("namq_10_gdp", time_format = "date")	
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{An example of creating time series with \cc{ts()} (2)}
+\begin{itemize}
+	\item Using the functions of the \textbf{dplyr} package, we filter data on Bulgarian GDP and consumption only
+	\item The values we choose are at 2010 prices, not seasonally adjusted
+	\begin{lstlisting}[style = rstyle, breaklines]
+	data_gdpq_bg <- data_gdpq %>%
+	  filter(geo == "BG", 
+         unit == "CLV10_MEUR",
+         s_adj == "NSA",
+         na_item %in% c("B1GQ", "P3")) %>%
+	  select(time, values, na_item) %>%
+	  spread(na_item, values)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{An example of creating time series with \cc{ts()} (3)}
+\begin{itemize}
+	\item Create names for the time series from the names of the variables in the data frame
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	names_ts <- character()
+
+	for(i in names(data_gdpq_bg)[2:3]){
+	  	names_ts[i] <- paste(i, ".ts", sep = "")
+		}
+
+	names_ts
+	\end{lstlisting}
+
+	\item Create the time series by assigning variables from the data frame to each name in the character vector:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	for(i in 1:length(names_ts)){
+  		assign(names_ts[i],ts(data_gdpq_bg[[i]], start = c(1995,1), frequency = 4))
+	}	
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Properties of \textbf{ts} objects}
+\begin{itemize}
+	\item You can view any \textbf{ts} object by just printing it in the console, e.g.:+
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	B1GQ.ts
+	\end{lstlisting}
+	
+	\item Check the class:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	class(B1GQ.ts)
+	\end{lstlisting}
+	
+	\item The start date, the end date, and the frequency of a time series can be viewed by means of:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	start(B1GQ.ts)
+	end(B1GQ.ts)
+	frequency(B1GQ.ts)
+	\end{lstlisting}
+	
+	\item You can also check the time interval between two consecutive observations:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	deltat(B1GQ.ts)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Subsetting \textbf{ts} objects}
+\begin{itemize}
+	\item The usual approaches used for vectors and lists are not appropriate
+	\item They will not produce objects of the \textbf{ts} type
+	\item Instead, the \cc{window()} command is used, e.g.:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	B1GQ_smpl.ts <- window(B1GQ.ts, start = c(2010, 1), end = c(2019,2))
+	
+	B1GQ_smpl.ts
+	\end{lstlisting}
+	
+	\item Check the sample class:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	class(B1GQ_smpl.ts)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Manipulating \textbf{ts} objects}
+\begin{itemize}
+	\item \textbf{ts} objects can be generated directly from a data frame:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	mts1 <- ts(data_gdpq_bg[,2:3], start = c(1995, 1), frequency = 4)
+	class(mts1)
+	\end{lstlisting}	
+
+	\item Individual \textbf{ts} objects can be combined using \cc{cbind()} or \cc{ts.union()}
+
+	\item  Examples:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	ts_comb1 <- cbind(B1GQ.ts, P3.ts)
+	ts_comb2 <- ts.union(B1GQ.ts, P3.ts)
+	\end{lstlisting}
+	
+	\item Check class:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	class(ts_comb1)
+	class(ts_comb2)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Manipulating \textbf{ts} objects (2)}
+\begin{itemize}
+	\item Lagged series (note we are using the function from the \textbf{stats} package):
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	B1GQ_lag1.ts <- stats::lag(B1GQ.ts,-1)
+	B1GQ_lag1.ts
+	start(B1GQ_lag1.ts)
+	\end{lstlisting}
+	
+	\item The default value is 1, however it shifts all observations one period backwards
+	
+	\item Using -1 shifts observations forward, thus matching current time with one-period lag value
+
+	\item Get the series and its first lag together
+	\begin{lstlisting}[style = rstyle, breaklines]
+	mts2 <- ts.union(B1GQ.ts, B1GQ_lag1.ts)
+	\end{lstlisting}
+	
+	\item Get the common sample data for two or more series:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	mts3 <- ts.intersect(B1GQ.ts, B1GQ_lag1.ts)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Manipulating \textbf{ts} objects (3)}
+\begin{itemize}
+	\item Differences of series:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	diff(B1GQ.ts)
+	\end{lstlisting}
+	
+	\item This will give you the first difference of the series
+	
+	\item You can specify a higher differencing order:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	diff(B1GQ.ts, differences = 2)
+	\end{lstlisting}
+	
+	\item Differences can be used in conjunction with lags (an option provided in the function):
+
+	\begin{lstlisting}[style = rstyle, breaklines]
+	diff(B1GQ.ts, lag = 4)
+	\end{lstlisting}
+	
+	\item The latter will produce seasonal differences in the current example
+\end{itemize}
+\end{frame}
+
+\section{Using contributed packages}
+\subsection{The zoo package}
+\begin{frame}[fragile]
+\frametitle{The \textbf{zoo} package}
+\begin{itemize}
+	\item The \textbf{ts} class has some limitations, e.g. it cannot work with irregularly spaced time series
+	\item This can cause unpleasant issues for example when you work with financial time series (especially daily or higher-frequency data\footnote{Monday to Friday are equally spaced but spacing between Friday and Monday is different, etc.})
+	\item The package provides the \textbf{zoo} class of objects which handle this type of situations
+	\item This class has similar (but much more powerful) functionality to that of \textbf{ts}
+	\item Therefore, using \textbf{zoo} is very straightforward to use when one is familiar with \textbf{ts}
+	\item Also, there is easy convertibility between the two classes
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{zoo} package (2)}
+\begin{itemize}
+	\item To create a \textbf{zoo} object, one needs data and a time-ordered index
+	\item The data can be contained in a vector or in a matrix
+	\item Let's take an example; create a random $120 \times 4$ matrix:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	m1 <- matrix(rnorm(480), nrow = 120)
+	colnames(m1) <- c("var1", "var2", "var3", "var4")
+	\end{lstlisting}
+	
+	\item Create a time index of class \textbf{Date}:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	idx1 <- seq(from = as.Date("2001-01-01"), 
+            length.out = 120, by = "months")
+	\end{lstlisting}
+	
+	\item Combine the data and the index in the \textbf{zoo} object:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	zoo1 <- zoo(m1, order.by = idx1)
+	\end{lstlisting}
+	\item The index variable can be of any of the valid date and time classes
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{zoo} package (3)}
+\begin{itemize}
+	\item In order to extract the index of a \textbf{zoo} object, type:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	index(zoo1)
+	\end{lstlisting}
+	\item The data can be extracted via:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	coredata(zoo1)
+	\end{lstlisting}
+	\item Of course, both are assignable to new objects
+	\item As with \textbf{ts} objects, you can find start and end dates by:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	start(zoo1)
+	end(zoo1)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{zoo} package (4)}
+\begin{itemize}
+	\item The \cc{summary()} command works seamlessly with \textbf{zoo} objects:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	summary(zoo1)
+	\end{lstlisting}
+	\item The same goes for the \cc{str()} function:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	str(zoo1)
+	\end{lstlisting}
+	\item For larger \textbf{zoo} objects, it is convenient to look at only some observations and not at all of them:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	head(zoo1)
+	tail(zoo1)
+	\end{lstlisting}
+	(the latter two work also for other objects)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{zoo} package (5)}
+\begin{itemize}
+	\item Subsetting (sampling) is (not surprisingly) done by means of the \cc{window()} function:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	zoo2 <- window(zoo1, start = as.Date(2005-11-15), end = as.Date(2007-08-30))
+	\end{lstlisting}
+	\item You can check the type of the new object to see that the data type is preserved
+	\item An individual series can be selected in two ways:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	zoo1[,1]
+	zoo1$var1
+	\end{lstlisting}
+	(the former uses matrix notation, and the latter -- list notation)
+	\item Individual elements (observations) can be selected using their matrix indices or, again, list notation:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	zoo1[2,3]
+	zoo1$var3[2] 	
+	\end{lstlisting} 
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{zoo} package (6)}
+\begin{itemize}
+	\item Lags and differences is performed in the same way as with \textbf{ts} objects:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	stats::lag(zoo1, -1)
+	diff(zoo1, differences = 1)
+	\end{lstlisting}
+	\item It is possible to merge several \textbf{zoo} objects:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	zoo3 <- cbind(zoo1$var2, zoo1$var1, stats::lag(zoo1$var1, -1)) 
+	# or
+	zoo3 <- merge(zoo1$var2, zoo1$var1, stats::lag(zoo1$var1, -1))
+	\end{lstlisting}
+	\item It is preferable however to use \cc{merge()} as it works as expected for cases when different objects have different time indices (not valid for \cc{cbind()})
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{zoo} package (7)}
+\begin{itemize}
+	\item External data can be read directly to \textbf{zoo} objects
+	\item This is done by means of the \cc{read.zoo()} command which essentially is a wrapper around the \cc{read.table()} command
+	\item Example (use again the GDP data):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	data_gdpq_bg.zoo <- read.zoo("data_gdpq_bg.csv", 
+                      index.column = 1, 
+                      FUN = as.Date,
+                      sep = ",",
+                      header = T)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{zoo} package (8)}
+\begin{itemize}
+	\item In this example, \cc{index.column = 1} refers to the column where date and time information lies
+	\item \cc{FUN = as.Date} specifies the function to apply to this column so that it is converted to the \textbf{Date} class (\textbf{yearmon} and \textbf{yearqtr} are also provided by \textbf{zoo})
+	\item See the documentation for a complete list of options
+	\item Also, note that the options are extensible by the list of the options of \cc{read.table()}
+	\item Similarly to \cc{write.table()}, there is a \cc{write.zoo()} command:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	write.zoo(data_gdpq_bg.zoo, "data_gdpq_bg.zoo.csv", index.name = "Time period", sep = ",")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{zoo} package (9)}
+\begin{itemize}
+	\item Finally, let's take examples of conversion between \textbf{zoo} and \textbf{ts}
+	\item Direct conversion from \textbf{zoo} to \textbf{ts} is no longer possible, so you have to use a data frame as a medium
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	ts_conv <- as.data.frame(data_gdpq_bg.zoo)
+	class(ts_conv)
+	ts_conv <- ts(ts_conv, start = c(1995,1), frequency = 4)
+	\end{lstlisting}
+	
+	\item To convert from \textbf{ts} to \textbf{zoo}:
+	
+	\begin{lstlisting}[style = rstyle, breaklines]
+	zoo_conv <- as.zoo(ts_comb1)
+	zoo_conv
+	index(zoo_conv)
+	class(zoo_conv)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\subsection{The xts package}
+\begin{frame}[fragile]
+\frametitle{The \textbf{xts} package}
+\begin{itemize}
+	\item The \textbf{xts} class is an extension of the \textbf{zoo} class
+	\item Decrypted as ``extensible time series''
+	\item Possesses a wider set of functions allowing more versatile data processing, manipulation, and conversion
+	\item This is achieved alongside with greater user-friendliness, simplicity and usability
+	\item Each \textbf{xts} objects has three components:
+	\begin{itemize}
+		\item A vector of times and/or dates
+		\item The core data which is again a matrix 
+		\item Attributes which include an index of times and dates and time zone format
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{xts} package (2)}
+\begin{itemize}
+	\item To create an \textbf{xts} object, the \cc{xts()} command is used:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	xts1 <- xts(data_gdpq_bg[,2:3], order.by = data_gdpq_bg$time, descr = "first xts object")
+	\end{lstlisting}
+	\item Obviously, it can contain a \cc{descr} attribute for easier reference
+	\item Check its class to see that it is created on top of a \textbf{zoo} structure:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	class(xts1)
+	\end{lstlisting}
+	\item Data can be queried/sampled by character matching, e.g.:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	xts1["2010"] # select all quarters of 2010
+	xts1["2010-01"] # select Q1 2010
+	xts1["2010-01/2010-06"] # select Q1-Q2 2010
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{xts} package (3)}
+\begin{itemize}
+	\item Let's create a date-time object in the POSIXct format using the \textbf{lubridate} package:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(lubridate)
+	nowtime <- now()
+	idx2 <- nowtime + days(0:364)
+	last(idx2)		
+	\end{lstlisting}
+	\item Create a data vector of the same length:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	rnorm_data <- rnorm(length(idx2))
+	\end{lstlisting}
+	\item Create the \textbf{xts} object
+	\begin{lstlisting}[style = rstyle, breaklines]
+	xts2 <- xts(rnorm_data, order.by = idx2)
+	colnames(xts2)[1] <- "data"
+	head(xts2)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{xts} package (4)}
+\begin{itemize}
+	\item There are specialized loop functions for \textbf{xts} objects, e.g.:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	apply.monthly(xts2, mean)
+	apply.quarterly(xts2, sd)
+	apply.yearly(xts2, sum)
+	\end{lstlisting}
+	\item You can also use an anonymous function in place of the above
+	\item Merging \textbf{xts} objects is again done with \cc{merge()}, with some more additional options (not discussed here)
+	\item Start time and ending time are obtained by means of:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	start(xts2)
+	end(xts2)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{xts} package (5)}
+\begin{itemize}
+	\item You can also calculate the number of days, weeks, months, etc. in an \textbf{xts} object:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	ndays(xts2)
+	nmonths(xts2)
+	nyears(xts2)
+	\end{lstlisting}
+	\item Statistical calculations by time period are performed in the following manner:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	endp1 <- endpoints(xts2,'weeks')
+	period.apply(xts2, INDEX=endp1, mean)
+	endp2 <- endpoints(xts2,'months')
+	period.max(xts2, INDEX=endp2)
+	\end{lstlisting}
+	\item etc.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{References}
+\begin{itemize}
+	\item Packages documentation
+	\item Kabacoff, R. (2015): \textit{R in Action: Data analysis and graphics with R}, Manning, 2nd ed., Ch. 15
+	\item Zhang, D. (2016): \textit{R for Programmers}, CRC Press, Ch. 2
+\end{itemize}
+\end{frame}
+
+\end{document}

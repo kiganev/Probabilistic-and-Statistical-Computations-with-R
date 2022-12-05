@@ -1,0 +1,1083 @@
+\documentclass[10pt]{beamer}
+\usetheme{CambridgeUS}
+%\usetheme{Boadilla}
+\definecolor{myred}{RGB}{163,0,0}
+%\usecolortheme[named=blue]{structure}
+\usecolortheme{dove}
+\usefonttheme[]{professionalfonts}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest,compat/show suggested version=false}
+\usetikzlibrary{arrows,shapes,calc,backgrounds}
+\usepackage{bm}
+\usepackage{textcomp}
+%\usepackage{gensymb}
+%\usepackage{verbatim}
+\usepackage{mathrsfs}  
+\usepackage{paratype}
+\usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+\newcommand{\cc}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{\mathsf{E}}
+\DeclareMathOperator{\var}{\mathsf{Var}}
+\DeclareMathOperator{\cov}{\mathsf{Cov}}
+\DeclareMathOperator{\corr}{\mathsf{Corr}}
+\DeclareMathOperator{\plim}{plim}
+\DeclareMathOperator{\rank}{rank}
+
+
+\definecolor{ttcolor}{RGB}{0,0,1}%{RGB}{163,0,0}
+\definecolor{mygray}{RGB}{248,249,250}
+
+% Number theorem environments
+\setbeamertemplate{theorem}[ams style]
+\setbeamertemplate{theorems}[numbered]
+
+% Reset theorem-like environments so that each is numbered separately
+\usepackage{etoolbox}
+\undef{\definition}
+\theoremstyle{definition}
+\newtheorem{definition}{\translate{Definition}}
+
+% Change colours for theorem-like environments
+\definecolor{mygreen1}{RGB}{0,96,0}
+\definecolor{mygreen2}{RGB}{229,239,229}
+\setbeamercolor{block title}{fg=white,bg=mygreen1}
+\setbeamercolor{block body}{fg=black,bg=mygreen2}
+
+\lstdefinestyle{numbers}{numbers=left, stepnumber=1, numberstyle=\tiny, numbersep=10pt}
+\lstdefinestyle{MyFrame}{backgroundcolor=\color{yellow},frame=shadowbox}
+
+\lstdefinestyle{rstyle}%
+{language=R,
+	basicstyle=\footnotesize\ttfamily,
+	backgroundcolor = \color{mygray},
+	commentstyle=\slshape\color{green!50!black},
+	keywordstyle=\color{blue},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+	%escapechar=\#,
+	rulecolor = \color{mygray}, 
+	showstringspaces = false,
+	showtabs = false,
+	tabsize = 2,
+	emphstyle=\color{red},
+	frame = single}
+
+\lstset{language=R,frame=single}    
+
+\hypersetup{colorlinks, urlcolor=blue, linkcolor = myred}
+
+\AtBeginSection{\frame{\sectionpage}}
+
+% Remove Section 1, Section 2, etc. as titles in section pages
+\defbeamertemplate{section page}{mine}[1][]{%
+	\begin{centering}
+		{\usebeamerfont{section name}\usebeamercolor[fg]{section name}#1}
+		\vskip1em\par
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+} 
+
+\setbeamertemplate{section page}[mine] 
+
+\beamertemplatenavigationsymbolsempty 
+
+\title{R403: Probabilistic and Statistical Computations\\ with R}
+\subtitle{Topic 13: \textcolor{myred}{Introduction to R Graphics}}
+\author{Kaloyan Ganev}
+
+\date{2022/2023} 
+
+\begin{document}
+\maketitle
+
+\begin{frame}[fragile]
+\frametitle{Lecture Contents}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}[fragile]
+\frametitle{Introduction}
+\begin{itemize}
+	\item Graphs are indispensable in studying and presenting data and results
+	\item They provide a lot of insight and hints on where to go next with data analysis
+	\item As you are aware, there are graphs to display any type of data
+	\item R has enormous and flexible capabilities to chart data
+	\item In general, there are two command types related to graphical output in R: commands to create a basic plot, and commands to tweak the output to one's liking
+	\item We will discuss also specialized packages that have lots of tweaking pre-programmed so that you don't need to spend time on it but focus on more important stuff
+\end{itemize}
+\end{frame}
+
+\section{Base R Plotting Capabilities}
+\begin{frame}[fragile]
+\frametitle{The \cc{plot()} Function}
+\begin{itemize}
+	\item Generate some random and some not-so-random data:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	x <- 1000*runif(50)
+	y <- 0.8*x + rnorm(50, mean = 0, sd = 75)
+	\end{lstlisting}
+	\item We will start with scatterplots, as they are usually among the most frequently used ones
+	\item To plot $y$ against $x$, just type:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(x,y)	
+	\end{lstlisting}
+	\item Usually we have the response variable on the vertical axis, and the variable that influences it -- on the horizontal axis
+	\item The plot is not so impressive but does the job (for now)
+	\item We will use it as a basis for expanding on R's charting capabilities
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Tweaking the Basic Plots}
+\begin{itemize}
+	\item Let's create a data frame to see how data frame data is used in plots:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	df1 <- as.data.frame(cbind(x,y))
+	\end{lstlisting}
+	\item Rename the variables to something more meaningful:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	colnames(df1) <- c("inc", "cons")
+	\end{lstlisting}
+	\item \ldots and plot:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(df1$inc, df1$cons)
+	\end{lstlisting}
+	\item The first thing that looks ugly are the axis labels; a chart title is also missing
+	\item This can be corrected by adding some options to the graph:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(df1$inc, df1$cons, xlab = "Aggregate income", ylab = "Aggregate consumption", main = "Some macroeconomic aggregates")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Tweaking the Basic Plots (2)}
+\begin{itemize}
+	\item The scales of the two variables can be tweaked by respectively \cc{xlim} and \cc{ylim} as in:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(df1$inc, df1$cons, xlab = "Aggregate income", ylab = "Aggregate consumption", main = "Some macroeconomic aggregates", xlim = c(0,2000), ylim = c(0, 2000))
+	\end{lstlisting}
+	\item Sometimes one would want to change the type of plotting character (empty dot by default)
+	\item There are many available options which can be found here: \url{https://www.r-bloggers.com/2021/06/r-plot-pch-symbols-different-point-shapes-in-r/}
+	\item Symbols are selected with the \cc{pch} option, their size is controlled with the \cc{cex} option, and their color -- with the \cc{col} option; see the following example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(df1$inc, df1$cons, xlab = "Aggregate income", ylab = "Aggregate consumption", main = "Some macroeconomic aggregates", pch = 20, cex = 2, col = "red")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Tweaking the Basic Plots (3)}
+\begin{itemize}
+	\item There are actually many more graphics options that can be utilized
+	\item There is a default set of such parameters that is contained in a pre-specified list in R
+	\item This list can be called with the \cc{par()} function
+	\item That same function allows to set the parameters so that they can be used as default
+	\item The latter also prevents lots of typing when no (significant) changes of your graphs are necessary, and also makes code much neater
+	\item In order to be able to go back to the original parameters, sometimes it is a good idea to save them in an object in your workspace:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	saved_par <- par()
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Tweaking the Basic Plots (4)}
+\begin{itemize}
+	\item We will use an example to demonstrate setting parameters with \cc{par()}
+	\item The following code shows some playing with it:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	par(
+  		bg = "lightgray", # background of chart
+			bty = "l", # box type around chart
+			cex = 2.5, # magnification of symbols
+			cex.axis = 0.4, # size of axis symbols relative to cex
+			cex.lab = 0.5, # size of labels relative to cex
+			cex.main = 0.67, # size of main title relative to cex
+			col = "darkorange", # colour of symbols
+ 			col.axis = "blue", # colour of axes symbols
+			col.lab = "blue", # colour of axis labels
+			col.main = "darkgreen", # colour of main title
+			family = "serif",
+			fig = saved_par$fig,
+			fin = saved_par$fin,
+			mar = c(4,4,2,2),
+			pch = 20 # symbol for plotting
+			)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Tweaking the Basic Plots (5)}
+\begin{itemize}
+	\item Now plot your figure with:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(df1$inc, df1$cons, xlab = "Aggregate income", ylab = "Aggregate consumption", main = "Some macroeconomic aggregates")
+	\end{lstlisting}
+	\item To switch back to default parameters:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	par(saved_par)
+	\end{lstlisting}
+	\item Let's now add a categorical variable to the data frame and name it ``country'':
+	\begin{lstlisting}[style = rstyle, breaklines]
+	f1 <- factor(sample(c(1:3),length(x),replace = T))
+	df1$country <- f1
+	\end{lstlisting}
+	\item We can now plot the same data but colour each country differently:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(df1$inc, df1$cons, xlab = "Aggregate income", ylab = "Aggregate consumption", main = "Some macroeconomic aggregates", col = df1$country, pch = 20, cex = 2)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Line Plots}
+\begin{itemize}
+	\item Still the \cc{plot()} command is used
+	\item As scatterplots use sorted observations, it is not advisable to turn them into line plots
+	\item Instead, we take an individual variable and plot it, setting some options, too
+	\item Start with a blanc plot to which we will later on add the lines:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(df1$inc, type = "l", lty = 0, ylab = "BGN", main = "Income and consumption")
+	\end{lstlisting}
+	\item \cc{type = "l"} is the option that makes it a line chart
+	\item \cc{lty} sets the type of line to use: can be specified as an integer (0=blank, 1=solid (default), 2=dashed, 3=dotted, 4=dotdash, 5=longdash, 6=twodash) or as character strings "blank", "solid", "dashed", "dotted", "dotdash", "longdash", or "twodash")
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Line Plots (2)}
+\begin{itemize}
+	\item To add the first variable as a line:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	lines(df1$inc, type = "l", lty = 1, lwd = 2, col = "red")
+	\end{lstlisting}
+	\item Here, \cc{lwd} sets line width
+	\item To add another line to the same graph:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	lines(df1$cons, type = "l", lty = 6, lwd = 2, col = "blue")
+	\end{lstlisting}
+	\item Finally, we might add a legend:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	legend(40,970, c("Income","Consumption"), lty=c(1,6), lwd=c(2,2), col=c("red","blue"))
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Plotting Graphs of Functions}
+\begin{itemize}
+	\item The \cc{curve()} function is used for that purpose
+	\item Take the following function:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	fun1 <- function(x){
+		3*x^3 + 2*x^2 - 7*x + 11
+		}
+	\end{lstlisting}
+	\item \ldots and plot it:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	curve(fun1, -10,10, lwd = 2, col = "red")
+	\end{lstlisting}
+	\item To add coordinate axes:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	abline(h = 0, lty = 2)
+	abline(v = 0, lty = 2)			
+	\end{lstlisting}	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Plotting Graphs of Functions (2)}
+\begin{itemize}
+	\item Too add more functions, e.g.:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	fun2 <- function(x){
+		1000*cos(x)
+		}
+	curve(fun2, -10, 10, add = T, lwd = 2, col = "blue")
+	\end{lstlisting}
+	\item Pay attention to the \cc{add = T} option!
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Pie Charts}
+\begin{itemize}
+	\item Created with the \cc{pie()} function
+	\item Example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	pie_data <- c(19,24,28,17,35)
+	pie_labels <- c("Apples", "Pears", "Cherries", "Oranges", "Bananas")
+	pie(pie_data, pie_labels, col = rainbow(length(pie_data)), main = "Fruit consumption")
+	\end{lstlisting}
+	\item 3D pie charts are also possible, e.g. using the \textbf{plotrix} package:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(plotrix)
+	pie3D(pie_data, labels = pie_labels, explode = 0.2, radius = 0.8, main = "Fruit consumption in 3D", labelcex = 1, labelcol = "blue")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Bar Plots}
+\begin{itemize}
+	\item Created with the \cc{barplot()} function
+	\item Both vertical and horizontal bars can be produced
+	\item An example of vertical bars:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	barplot(df1$inc, border = "darkgreen", col = "orange", xlab = "Index", ylab = "BGN", main = "Income levels")
+	\end{lstlisting}
+	\item Same example but with horizontal bars:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	barplot(df1$inc, horiz = T, border = "darkgreen", col = "orange", ylab = "Index", xlab = "BGN", main = "Income levels")
+	\end{lstlisting}
+	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Bar Plots (2)}
+\begin{itemize}
+	\item To plot two variables together:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	bar_data1 <- sample(30:50, 3)
+	bar_data2 <- sample(30:40, 3)
+	barplot(cbind(bar_data1,bar_data2), col = c("darkred", "darkorange", "yellow"), names.arg = c("My variable", "Your variable"))
+	\end{lstlisting}
+	\item The same, with bars beside each other:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	barplot(cbind(bar_data1,bar_data2), col = c("darkred", "darkorange", "yellow"), names.arg = c("My variable", "Your variable"), beside = T)		
+	\end{lstlisting}
+	\item Of course, there are many more parameters available
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Histograms}
+\begin{itemize}
+	\item Generated by means of \cc{hist()} and its options
+	\item Example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	z <- rnorm(500)
+	hist(z, border = "darkblue", col = "orange", breaks = 20, freq = FALSE)
+	\end{lstlisting}
+	\item If \cc{freq = TRUE} then counts are displayed instead of the density which is output in the above example
+	\item Check this one out too:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	hist(z, border = "darkblue", col = "darkgreen", density = 40, breaks = 20, freq = FALSE)
+	\end{lstlisting}
+	\item Here, the \cc{density} option provides the density of shading lines used; their angle can be controlled with \cc{angle}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Box Plots}
+\begin{itemize}
+	\item Created with \cc{boxplot()}
+	\item Simple example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	boxplot(df1$inc, col = "#D85625") # uses an HTML colour
+	\end{lstlisting}
+	\item The example from my ANOVA lecture:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	avgbuy <- read.csv("three_stores.csv")
+	boxplot(avgbuy, col = c("red","green","blue"))
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Pairs Plots}
+\begin{itemize}
+	\item Each pairs plot is actually a matrix of scatter plots
+	\item Used when your data set contains more than two variables and you would like to explore visually the (possible) association between any two variables
+	\item To illustrate, we will use Fisher's \texttt{iris} dataset which is readily available in R
+	\item Graphs are produced with:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	iris_df <- as.data.frame(iris)
+	pairs(iris_df[,1:4], col = iris_df[,5])	
+	\end{lstlisting}	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Plotting 3D Surfaces}
+\begin{itemize}
+	\item R has some core functionality in this respect
+	\item It is realized through the \cc{persp()} function
+	\item A simple example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dome <- function(x,y){
+		-(x^2 + y^2)
+		}
+	x <- seq(from=-3, to = 3, by=0.1)
+	y <- seq(from=-3, to = 3, by=0.1)
+	z <- outer(x,y,dome)
+	persp(x,y,z,col="blue",theta=70,phi=-10)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Multiple Plots in One Graph}
+\begin{itemize}
+	\item To do that, you need first to create a special matrix which will hold the plots
+	\item In fact, this matrix already exists and you've been using it all along
+	\item It is just of size $1 \times 1$
+	\item What is necessary is to resize it
+	\item This is done again with the \cc{par()} function using the \cc{mfrow} option
+	\item For example, in order to create a graph that has four plots in it ($2 \times 2$):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	par(mfrow = c(2,2))
+	plot(rnorm(100), type = "p")
+	plot(rnorm(100), type = "l")
+	plot(rnorm(100), type = "s")
+	plot(rnorm(100), type = "b")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Multiple Plots in One Graph (2)}
+\begin{itemize}
+	\item What if you need an unequal number of plots in each row/column of the graph?
+	\item This is achieved with the \cc{layout()} function
+	\item Its argument is a matrix of integers in which each unique integer stands for a single object
+	\item For example, to create a graph which has one plot in its first column and two plots in the second column, you use the following:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	pos_m <- matrix(c(1,1,2,3), nrow = 2)
+	layout(pos_m)
+	plot(rnorm(100), type = "p")
+	plot(rnorm(100), type = "l")
+	plot(rnorm(100), type = "s")
+	\end{lstlisting}
+	\item To return to the single-plot layout you can for example type:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	par(mfrow = c(1,1))
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Saving Graphs to Disk}
+\begin{itemize}
+	\item It is possible to export and save you graphical output to various graphical formats
+	\item This is a very convenient feature which allows you to later on use graphs in your documents (paper, thesis, etc.)
+	\item The functionality is provided by the \textbf{grDevices} package (comes with the base distribution)\footnote{See the full documentation here: \url{https://stat.ethz.ch/R-manual/R-devel/library/grDevices/html/00Index.html}.}
+	\item Each export format is treated as a device
+	\item Supported popular formats are BMP, JPEG, PNG, TIFF, PDF, Postscript, etc.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Saving Graphs to Disk (2)}
+\begin{itemize}
+	\item There are two ways of exporting and saving
+	\item First, you turn on the relevant device:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	png("linegr1.png", height=600, width=800)
+	\end{lstlisting}
+	\item Then you create the graph:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(rnorm(100), type = "l")
+	\end{lstlisting}
+	\item Finally, you turn off the device:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	dev.off()
+	\end{lstlisting}
+	\item In this case, the graph is not visualised in R
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Saving Graphs to Disk (3)}
+\begin{itemize}
+	\item The second approach boils down to copying and exporting the latest graphical output:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(rnorm(1000), type = "l", lwd = 1.5, col = "red", main = "Gaussian white noise")
+	dev.copy2pdf(file = "wn.pdf", height=6, width=8)
+	dev.copy2ps(file = "wn.eps", height=6, width=8)
+	\end{lstlisting}
+	\item Note that in the last two examples (pdf and ps) no \cc{dev.off()} is necessary
+\end{itemize}
+\end{frame}
+
+\section{An introduction to the lattice package}
+\begin{frame}[fragile]
+\frametitle{The \textbf{lattice} Package}
+\begin{itemize}
+	\item R has a parallel graphics system called \textbf{grid}
+	\item This system provides only low-level graphics functions but does not allow to produce complete plots
+	\item \textbf{lattice} is one of the packages\footnote{\textbf{ggplot2} is the other one considered later.} that builds upon this system by providing high-level functions that allow creating complete graphs
+	\item Load it with:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(lattice)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{lattice} Package (2)}
+\begin{itemize}
+	\item The most basic plot is very similar to the ones considered with base R:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	xyplot(cons ~ inc, data = df1)
+	\end{lstlisting}
+	\item Analogically, they can be tweaked further, e.g. through:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	df1$index <- c(1:length(df1$cons))
+	xyplot(cons ~ index, data = df1, type="o", lty = 2, pch=24, main="Income vs. consumption")
+	\end{lstlisting}
+	\item Bar charts are produced with \cc{barchart()}:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	barchart(cons ~ index, horizontal = FALSE, data = df1, main="Consumption", col = "darkred")
+	\end{lstlisting}
+	\item Box (and whiskers) plots 
+	\begin{lstlisting}[style = rstyle, breaklines]
+	rnd1 <- rnorm(1000)
+	bwplot(rnd1, col = "red", fill = "green")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{lattice} Package (3)}
+\begin{itemize}
+	\item Histograms and density plots
+	\begin{lstlisting}[style = rstyle, breaklines]
+	histogram(rnd1, col = "orange")
+	densityplot(rnd1, lwd = 3)
+	\end{lstlisting}
+	\item Q-Q plots:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	qqmath(rnd1)
+	\end{lstlisting}
+	\item Other capabilities of the \textbf{lattice} package may be explored by checking out the demo:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	demo(lattice)
+	\end{lstlisting}
+	\item There is also a package called \textbf{latticeExtra} which (as its name tells) extends \textbf{lattice}'s capabilities and range of graphs produced (see \url{http://latticeextra.r-forge.r-project.org/#panel.quantile&theme=default})
+\end{itemize}
+\end{frame}
+
+\section{An Introduction to the ggplot2 Package}
+\begin{frame}[fragile]
+\frametitle{The \textbf{ggplot2} Package}
+\begin{itemize}
+	\item As usual, in order to use it, first install it
+	\item The name of the package comes from the title of a book whose conceptual models it implements (\emph{The Grammar of Graphics} by L. Wilkinson)
+	\item There are two ways to create graphics using the \textbf{ggplot2} package:
+	\begin{itemize}
+		\item Using the \cc{qplot()} command -- to create quick plots
+		\item Using the \cc{ggplot()} command (and the associated ones) to use the full potential of the package
+	\end{itemize}
+	\item We will discuss each of the two in turn
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Using \cc{qplot()}}
+\begin{itemize}
+	\item \cc{qplot()} is similar in its application to \cc{plot()}
+	\item One needs to specify only the data to be used:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	qplot(cons, inc, data = df1, main = "Consumption vs. income")
+	\end{lstlisting}
+	\item Quick plots are pre-formatted with default package settings
+	\item There are some more tweaking options unused above but it is a better idea, if you need further graph customization (or, in fact, in principle), to learn more and use \cc{ggplot()}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{ggplot()} Command}
+\begin{itemize}
+	\item \textbf{ggplot2} sticks, as already mentioned, to the paradigm of the \emph{The Grammar of Graphics} book
+	\item This paradigm specifies that instead of using a separate function for each type of graph, graphs should be constructed by means of a small set of functions -- where each function produces a graph component
+	\item In other words, graphs are being constructed by means of layers and layer elements, each one using a specific function and its options
+	\item The first essential command is \cc{ggplot()}: it creates an empty plot
+	\item In a way, you can think of the empty plot as of a painter's canvas with a prime (ground) layer applied to it
+	\item When created, it waits for the painting to be created on it
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \cc{aes()} and \cc{geom()} Commands}
+\begin{itemize}
+	\item \cc{aes()} stands for \emph{aesthetics}
+	\item Specifies how variables in the data are mapped to visual properties (aesthetics) of the so-called \emph{geoms}
+	\item \emph{Geoms} themselves are the graphics shapes (lines, dots, bars, etc.) used to display the data
+	\item The \cc{geom()} command in its various forms adds the geoms to the graph
+	\bigskip\\
+	\tikzstyle{block} = [rectangle, draw, fill=orange!40, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+
+\begin{center}
+\begin{tikzpicture}[node distance = 2cm, auto]
+    % Place nodes
+    \node[block] (data) {data};
+    \node[block, right of = data, node distance = 3cm] (aes) {aesthetic};
+    \node[block, right of = aes, node distance = 3cm] (geom) {geom};
+    % Draw edges
+    \path [line] (data) -- (aes);
+    \path [line] (aes) -- (geom);
+\end{tikzpicture}
+\end{center} 
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{A Simple Example}
+\begin{itemize}
+	\item Take once again our consumption and income example (with random data)
+	\item To create the base layer of the graph and save the result in a graph object, type the following:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	gg_graph1 <- ggplot(df1)
+	\end{lstlisting}
+	\item Then add the aesthetics together with the preferred shape
+	\begin{lstlisting}[style = rstyle, breaklines]
+	gg_graph1 <- gg_graph1 + geom_point(aes(x = inc, y = cons), size = 6, colour = "red")
+	\end{lstlisting}
+	\item By this, we are actually adding a new layer to the graph (using the plus operator)
+	\item In the above, we also added some extra formatting options
+\end{itemize}
+\end{frame} 
+
+\begin{frame}[fragile]
+\frametitle{List of Geoms and Aesthetics}
+%\lstinputlisting[style = rstyle, breaklines]{./data/table_commands.txt}
+\begin{small}
+\begin{tabular}{lll}
+Geom & Description & Aesthetics\\
+\hline
+\cc{geom\_point()} & Data symbols & x, y, shape,fill\\
+\cc{geom\_line()} & Line (ordered on x) & x, y, linetype\\
+\cc{geom\_path()} & Line (original order) & x, y, linetype\\
+\cc{geom\_text()} & Text labels & x, y, label, angle, hjust, vjust\\
+\cc{geom\_rect()} & Rectangles & xmin, xmax, ymin, ymax, fill, linetype\\
+\cc{geom\_polygon()} & Polygons & x, y, fill, linetype\\
+\cc{geom\_segment()} & Line segments & x, y, xend, yend, linetype\\
+\cc{geom\_bar()} & Bars & x, fill, linetype, weight\\
+\cc{geom\_histogram()} & Histogram & x,fill,linetype,weight\\
+\cc{geom\_boxplot()} & Boxplots & x, y, fill, weight\\
+\cc{geom\_density()} & Density & x, y, fill, linetype\\
+\cc{geom\_contour()} & Contour lines & x, y, fill, linetype\\
+\cc{geom\_smooth()} & Smoothed line & x, y, fill, linetype\\
+ALL & color, size, group & \\
+\hline
+\end{tabular}
+\end{small}
+\bigskip\\
+(Table borrowed from Murrell (2012), p. 152)
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Some More Examples with \cc{ggplot()}}
+\begin{itemize}
+	\item \cc{ggplot()} can be used to plot histograms and densities; for a demo, let's use the data found in the \texttt{iris} dataset
+	\item The two sets of commands are as follows:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	gg_hist <- ggplot(iris_df)
+	gg_hist <- gg_hist + geom_histogram(aes(x = Petal.Length, color=Species, fill=Species), alpha=I(0.5))
+		
+	gg_dens <- ggplot(iris_df)
+	gg_dens <- gg_dens + geom_density(aes(x = Petal.Length, color=Species, fill=Species, alpha=I(0.5)))
+	\end{lstlisting}
+	\item In order to make a box plot:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	gg_box <- ggplot(iris_df)
+	gg_box <- gg_box + geom_boxplot(aes(x = Species, y = Petal.Length, fill=Species, alpha=I(0.5)))
+	\end{lstlisting}
+	\item Here, \cc{alpha} controls transparency
+	\item etc.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Setting Scales in \textbf{ggplot2}}
+\begin{itemize}
+	\item Scales concern axes and legends
+	\item Usually scales are appropriately set by the \textbf{ggplot2} package so there is no real need to tweak the limits of variables' values
+	\item However, through adjusting scales' parameters it is for example possible to change the automatically set axis labels
+	\item An example:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	gg_points <- ggplot(df1)
+	gg_points <- gg_points + geom_point(aes(x = inc, y = cons, color = country, fill=country), size = I(6), alpha=I(0.5))
+	gg_points <- gg_points + scale_x_continuous(name="Household income (EUR)") + 
+          scale_y_continuous(name="Household consumption (EUR)") 
+	\end{lstlisting}		
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Setting Scales in \textbf{ggplot2} (2)}
+\begin{itemize}
+	\item If still a change in an axis' limits is needed, it is achieved through the \cc{limits = c(x\_value, y\_value)} option
+	\item The colours of dots, respectively the legend, can be done in the following way:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	gg_points <- gg_points +  scale_colour_manual(values = c("orange","darkblue", "darkgreen"))
+	\end{lstlisting}
+\end{itemize}
+
+\tikzstyle{block} = [rectangle, draw, fill=orange!40, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\begin{center}
+\begin{tikzpicture}[node distance = 2cm, auto]
+    % Place nodes
+    \node[block] (data) {data};
+    \node[block, right of = data, node distance = 3cm] (scale) {scale};
+    \node[block, right of = scale, node distance = 3cm] (aes) {aesthetic};
+    \node[block, right of = aes, node distance = 3cm] (geom) {geom};
+    % Draw edges
+    \path [line] (data) -- (scale);
+    \path [line] (scale) -- (aes);
+    \path [line] (aes) -- (geom);
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{List of Scale Types and Parameters}
+\begin{small}
+\begin{tabular}{lll}
+	Scale & Description & Parameters\\
+	\hline
+	\cc{scale\_x\_continuous()} & Continuous axis & expand, trans\\
+	\cc{scale\_x\_discrete()} & Categorical axis\\
+	\cc{scale\_x\_date()} & Date axis & major, minor, format\\
+	\cc{scale\_shape()} & Symbol shape legend\\
+	\cc{scale\_linetype()} & Line pattern legend\\
+	\cc{scale\_color\_manual()} & Symbol/line color legend & values\\
+	\cc{scale\_fill\_manual()} & Symbol/bar fill legend & values\\
+	\cc{scale\_size()} & Symbol size legend & trans, to\\
+	ALL & &	 name, breaks, labels, limits\\
+	\hline
+\end{tabular}
+\end{small}
+(Table borrowed from Murrell (2012), p. 157)
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Statistical Transformations}
+\begin{itemize}
+	\item It is possible to map aesthetics not directly to raw (untransformed) data but to their transformations via statistical functions
+	\item For example, this adds a polynomial regression estimate to the graph:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	gg_points <- gg_points + stat_smooth(aes(x = inc, y = cons), method=lm, formula = y ~ poly(x,2), level=0.95)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Facets}
+\begin{itemize}
+	\item Data can be broken into subsets and then a separate plot for each subset can be made
+	\item For this purpose, \cc{facet\_wrap()} is used 
+	\item This function requires a formula as an argument 
+	\item The formula provides a description of the the variable that will be used to
+subset the data
+	\item We will use the income and consumption data frame to illustrate this
+	\begin{lstlisting}[style = rstyle, breaklines]
+	gg_facets <- ggplot(df1)
+	gg_facets <- gg_facets + geom_point(aes(x=inc, y=cons), colour = "red", size = I(3))
+	gg_facets <- gg_facets + facet_wrap(~ country, nrow=2)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Themes}
+\begin{itemize}
+	\item As it already became clear, \textbf{ggplot2} separates graph elements into data and non-data ones
+	\item The data-related elements are represented by geoms, and the appearance of geoms is controlled by aesthetics
+	\item Themes are collections of graphical parameters to control non-data elements
+	\item We show some examples of themes in code but we will not dig into the details
+	\item Details, however, allow customization of individual theme elements 
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Annotations}
+\begin{itemize}
+	\item Annotations are in general text labels placed over graphs for displaying additional information not directly inferable from the data
+	\item Of course, this means placing an additional layer over the graph
+	\item Check out the following two:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	gg2 <- gg2 + geom_point(aes(x = Sepal.Width, y = Sepal.Length)) +
+		geom_text(aes(x = Sepal.Width, y = Sepal.Length, label = Species, color = Species))
+		
+	gg2 <- gg2 + geom_point(aes(x = Sepal.Width, y = Sepal.Length)) + 
+    	geom_label(aes(x = 		Sepal.Width, y = Sepal.Length, label = Species, color = Species))
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Annotations (2)}
+\begin{itemize}
+	\item An annotation layer can also be created in the following way:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	gg3 <- ggplot(df1)
+	gg3 <- gg3 + geom_point(aes(x = inc, y = cons), size = 6, colour = "red")
+	gg3 <- gg3 + annotate("text", x = 100, y = 700, label = "A text annotation", size = I(6), color = "blue")
+
+	gg3 <- gg3 + annotate("rect", xmin = 100, xmax =  300, ymin = 0, ymax = 300, alpha = 0.2)
+
+	gg3 <- gg3 + annotate("segment", x = 600, xend =  900, y = 800, yend = 0, color = "darkgreen")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\section{An introduction to the ggvis package}
+\begin{frame}[fragile]
+\frametitle{The \textbf{ggvis} Package}
+\begin{itemize}
+	\item Created by the RStudio team, a quite new project
+	\item Current version is 0.4 (far from version 1.0 but still very promising)
+	\item Like \textbf{ggplot2}, it is based on the \emph{Grammar of Graphics} philosophy
+	\item However, in addition it combines the above with the \textbf{Vega} model\footnote{\url{https://vega.github.io/vega/}} which allows to draw raster graphics in the HTML 5 canvas or vector graphics in the svg format using JavaScript
+	\item This makes it possible to render graphics in a standard web browser while allowing interactive plots
+	\item As RStudio in fact possesses many features of browsers, it is possible to visualize graphics directly in it
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \textbf{ggvis} Package (2)}
+\begin{itemize}
+	\item The full (available as of now) documentation can be found here: \url{http://ggvis.rstudio.com/}
+	\item We will not consider the details of the package as they are not directly relevant to the programme courses
+	\item We will only take a look at the online examples
+\end{itemize}
+\end{frame}
+
+\section{An Introduction to the rbokeh Package}
+\begin{frame}[fragile]
+\frametitle{The \textbf{rbokeh} Package}
+\begin{itemize}
+	\item \textbf{rbokeh} is similar to \textbf{ggvis}
+	\item Also quite new, current version 0.5.0
+	\item Uses the \textbf{Bokeh} library which has interfaces to Python, Scala, R, and Julia
+	\item Again, we will refrain from exploring its syntax, instead we will look again at the online examples: \url{https://hafen.github.io/rbokeh/}
+	\item As you can see there, development is in its relatively early stages 
+	\item Nevertheless, it is a promising project, too
+\end{itemize}
+\end{frame}
+
+\section{Plotting time series}
+\begin{frame}[fragile]
+\frametitle{Plotting Time Series}
+\begin{itemize}
+	\item Plotting time series is in general not different from plotting other objects
+	\item However, here we discuss it for two purposes:
+	\begin{enumerate}
+		\item To make a smooth transition to real-life data
+		\item To make a quick review of plotting approaches using time series objects
+	\end{enumerate}
+	\item Start with places where many datasets can be found so that we can use them for illustration purposes: \url{https://www.quora.com/Where-can-I-find-large-datasets-open-to-the-public}
+	\item We will for the examples the Quandl database
+	\item This database has an R interface to directly download data to your R IDE
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Quandl}
+\begin{itemize}
+	\item In order to explore the contents of Quandl, it is necessary to create an account at \url{https://www.quandl.com/}
+	\item Other than that, you don't need login credentials to download data to R
+	\item Install the package and load it:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(Quandl)
+	\end{lstlisting}
+	\item Note that it also loads automatically \textbf{xts} (and, of course, \textbf{zoo})
+	\item Let's download data on the price of gold from the Bundesbank database:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	data1 <- Quandl("BUNDESBANK/BBK01_WT5511")
+	\end{lstlisting}
+	\item A dataframe is created
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Plotting the Data}
+\begin{itemize}
+	\item We can use standard plotting functionality to plot the data:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(data1$Date, data1$Value, type = "l")
+	\end{lstlisting}
+	\item The plot will be roughly correct except for the fact that it does not refer to `real' time series data
+	\begin{lstlisting}[style = rstyle, breaklines]
+	class(data1)
+	\end{lstlisting}
+	\item It is not a good idea to convert to a \textbf{ts} object as the data is of irregular frequency
+	\item Therefore, it is better to have them in the \textbf{xts} format:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	xts1 <- as.xts(data1$Value, order.by = data1$Date)
+	names(xts1)[1] <- "gold_price"
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Plotting the Data (2)}
+\begin{itemize}
+	\item It turns out so that \textbf{xts} introduces its own plotting functionality after loading
+	\item Check out:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	plot(xts1[,1], col = "red", main = "Gold Price")
+	\end{lstlisting}
+	\item Actually, \cc{plot()} is in this case \cc{plot.xts()}
+	\item Good, but not very customizable
+	\item Let's plot the same series with \textbf{lattice}
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(lattice)
+	xyplot(xts1, type=c("l","g"), xlab="",main="Gold Price")
+	\end{lstlisting}
+	\item Now create a new \textbf{xts} object containing also percentage changes besides levels:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	xts2 <- merge(xts1[,1],diff.xts(log(xts1[,1])))
+	colnames(xts2)[2] <- "change"
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Plotting the Data (3)}
+\begin{itemize}
+	\item To plot the two series together but in split plots:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	xyplot(xts2, type=c("l","g"), strip = strip.custom(factor.levels = c("Gold Price, USD","Percentage change")), main="Gold Price")
+	\end{lstlisting}
+	\item To tweak it further, save the \textbf{lattice} parameters for later use with:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	savepar <- trellis.par.get()
+	\end{lstlisting}
+	\item Then set the new parameters and plot:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	trellis.par.set(strip.background = list(col="#0080ff"))
+	xyplot(xts2, type=c("l","g"), strip = strip.custom(factor.levels = c("Gold Price, USD","Percentage change")), par.strip.text = list(col="white", font = 2), main="Gold Price")
+	\end{lstlisting}
+	\item To return to the old parameters:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	trellis.par.set(savepar)
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Plotting the Data (4)}
+\begin{itemize}
+	\item The last plotting approach that will be considered explicitly is that using \textbf{ggplot2}
+	\begin{lstlisting}[style = rstyle, breaklines]
+	gg1 <- ggplot(data = xts2) + 
+		geom_line(aes(x = Index, y = gold_price), colour = "#0080ff") + 
+		theme_bw() +
+		ggtitle("Gold price, USD") + 
+		theme(plot.title = element_text(face="bold", colour = "red"))
+	gg1
+
+	gg2 <- ggplot(xts2) +
+		geom_line(aes(x = Index, y = change), colour = "#0080ff") + 
+		theme_bw() +
+		ggtitle("Change, %") + 
+		theme(plot.title = element_text(face="bold", colour = "red"))
+	gg2
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Plotting the Data (5)}
+\begin{itemize}
+	\item With the \textbf{gridExtra} package, for example, it is possible to combine the above two graphs into a single one:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	library(gridExtra)
+	grid.arrange(gg1, gg2, ncol=1) 
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Plotting the Data (6)}
+\begin{itemize}
+	\item What if we want several series in a single plot?
+	\item Let's first download some more data (exchange rates, unimportant otherwise):
+	\begin{lstlisting}[style = rstyle, breaklines]
+	data2 <- Quandl("BOE/XUDLGBD")
+	data3 <- Quandl("BOE/XUDLADD")
+	\end{lstlisting}
+	\item Generate \textbf{xts} objects:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	xts3 <- as.xts(data2$Value, order.by = data2$Date)
+	xts4 <- as.xts(data3$Value, order.by = data3$Date)
+	\end{lstlisting}
+	\item Merge them and change column names:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	xts5 <- merge.xts(xts3, xts4)
+	colnames(xts5) <- c("GBP_USD", "AUD_USD")
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Plotting the Data (8)}
+\begin{itemize}
+	
+	\item Make the graph:
+	\begin{lstlisting}[style = rstyle, breaklines]
+	ggplot(xts5)  +
+		geom_line(aes(x = Index, y = GBP_USD, color = "GBP/USD")) +
+		geom_line(aes(x = Index, y = AUD_USD, color = "AUD/USD")) +
+		scale_color_manual("", values = c("darkred", "darkblue")) + 
+		theme_bw() + 
+		xlab("") + 
+		ylab("") +
+		annotate("rect", 
+        	xmin = as.Date("2008-01-01"),
+        	xmax = as.Date("2014-12-18"),
+        	ymin = min(xts5[,1]),
+        	ymax = max(xts5[,2]), fill = "orange", alpha = I(0.2))
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Don't Miss Out!}
+\begin{center}
+\Huge{Plotly!}
+(\url{https://plot.ly/})
+\end{center}
+R package: \url{https://cran.r-project.org/web/packages/plotly/index.html}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{References}
+\begin{itemize}
+	\item Sarkar, D. (2008): \emph{Lattice: Multivariate Data Visualization with R}, Springer
+	\item Teutonico, D. (2015): \emph{ggplot2 Essentials}, Packt Publishing
+	\item Wickham, H. (2009): \emph{ggplot2: Elegant Graphics for Data Analysis}, Springer
+	\item Zuur, A., E. Ieno and E. Meesters (2009): \emph{A Beginner’s Guide to R}, Springer, Ch. 5
+\end{itemize}
+\end{frame}
+\end{document}
+
+http://finzi.psych.upenn.edu/library/rgl/html/persp3d.function.html
